@@ -40,3 +40,9 @@ database_id = "13e065a3-b527-4613-8e8f-1ec7e1933d3f"
 # CF_GATEWAY_NAME    — Cloudflare AI Gateway Name (e.g. "jellyfish-gateway")
 # CF_AIG_TOKEN       — Cloudflare AI Gateway Token (generated in Gateway → Auth)
 # GEMINI_MODEL       — (optional) Default model, e.g. gemini-2.5-pro-preview-03-25
+
+[vars]
+GEMINI_MODEL = "gemini-3.1-pro-preview"
+X_CLIENT_ID = "V1lOUm1BcWQ5bHB3V3UyalhNbXM6MTpjaQ"
+CF_GATEWAY_NAME = "jellyfish-gateway"
+CF_ACCOUNT_ID = "1805cb9294c475500bf37b8428d32fc5"
