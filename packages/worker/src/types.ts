@@ -44,6 +44,7 @@ export interface AgentDbRecord {
   auto_evo: boolean;
   vip_list: VipEntry[]; // parsed
   mem_whitelist: string[] | 'all'; // parsed
+  pro_expires_at: number;
   created_at: number;
   status: string;
 }
@@ -73,6 +74,10 @@ export interface Env {
   CF_AIG_TOKEN: string;
   /** Local dev only: override origin (e.g. http://localhost:8787) to bypass Wrangler domain rewriting */
   LOCAL_ORIGIN?: string;
+  /** Ko-Fi Webhook verification token (set via wrangler secret put KO_FI_VERIFICATION_TOKEN) */
+  KO_FI_VERIFICATION_TOKEN?: string;
+  /** Cloudflare static assets binding — automatically provided when [assets] is configured in wrangler.toml */
+  ASSETS: Fetcher;
 }
 
 // ─── X API types ───────────────────────────────────────────────────────────────

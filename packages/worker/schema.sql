@@ -19,6 +19,7 @@ CREATE TABLE agents (
   auto_evo BOOLEAN,
   vip_list TEXT, -- JSON array
   mem_whitelist TEXT, -- JSON generic or specific
+  pro_expires_at INTEGER DEFAULT 0,
   created_at INTEGER,
   status TEXT DEFAULT 'active'
 );
