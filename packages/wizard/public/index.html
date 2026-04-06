@@ -127,8 +127,13 @@ h3.section{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppe
   <div class="field"><label>Gemini API Key</label>
     <input type="password" id="geminiKey" placeholder="AIza..."></div>
   <div class="field"><label>模型名称</label>
-    <input type="text" id="geminiModel" value="gemini-2.5-pro" placeholder="gemini-2.5-pro">
-    <div class="hint">例：gemini-2.5-pro · gemini-2.0-flash · gemini-1.5-pro</div></div>
+    <div style="display:flex;gap:8px">
+      <select id="geminiModel" style="flex:1">
+        <option value="gemini-2.5-pro">gemini-2.5-pro</option>
+      </select>
+      <button class="btn btn-ghost" id="fetchModelsBtn" onclick="fetchModels()">更新列表</button>
+    </div>
+    <div class="hint">填入 API Key 后点击按钮即可拉取该 Key 支持的所有可用模型</div></div>
   <div id="err1" class="alert alert-error"></div>
   <div class="row" style="margin-top:24px">
     <span class="spacer"></span>
@@ -384,6 +389,28 @@ function showErr(id, msg) {
   el.textContent = msg; el.className = 'alert alert-error show';
 }
 function clearErr(id) { const el = $(id); if(el) el.className = 'alert alert-error'; }
+
+// ── Models ────────────────────────────────────────────────────────────────────
+async function fetchModels() {
+  const key = $('geminiKey').value.trim();
+  if (!key) { showErr('err1', '请先输入 API Key'); return; }
+  clearErr('err1');
+  const btn = $('fetchModelsBtn');
+  btn.disabled = true; btn.textContent = '拉取中...';
+  try {
+    const r = await api('/api/models?key=' + encodeURIComponent(key));
+    btn.disabled = false; btn.textContent = '更新列表';
+    if (r.error) { showErr('err1', r.error); return; }
+    if (r.models && r.models.length > 0) {
+      $('geminiModel').innerHTML = r.models.map(m => `<option value="${m}">${m}</option>`).join('');
+    } else {
+      showErr('err1', '未找到可用的模型');
+    }
+  } catch (err) {
+    btn.disabled = false; btn.textContent = '更新列表';
+    showErr('err1', String(err));
+  }
+}
 
 // ── Navigation ──────────────────────────────────────────────────────────────────
 async function go(n) {
