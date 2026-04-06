@@ -138,19 +138,22 @@ export default {
       
       const state = crypto.randomUUID().replace(/-/g, '');
 
-      const host = request.headers.get('x-forwarded-host') || request.headers.get('host');
-      const reqOrigin = host ? `${url.protocol}//${host}` : url.origin;
+      // Local dev with 'routes' overrides request.url and Host. Use Origin/Referer from browser to get true local URL
+      const originHeader = request.headers.get('Origin') || 
+                           (request.headers.get('Referer') ? new URL(request.headers.get('Referer')!).origin : null);
+      const reqOrigin = originHeader || (request.headers.get('x-forwarded-host') ? `${url.protocol}//${request.headers.get('x-forwarded-host')}` : url.origin);
 
       const authUrl = new URL('https://twitter.com/i/oauth2/authorize');
       authUrl.searchParams.set('response_type', 'code');
       authUrl.searchParams.set('client_id', env.X_CLIENT_ID);
-      authUrl.searchParams.set('redirect_uri', reqOrigin + '/callback');
+      const redirectUri = reqOrigin + '/callback';
+      authUrl.searchParams.set('redirect_uri', redirectUri);
       authUrl.searchParams.set('scope', 'tweet.read tweet.write users.read offline.access');
       authUrl.searchParams.set('state', state);
       authUrl.searchParams.set('code_challenge', codeChallenge);
       authUrl.searchParams.set('code_challenge_method', 'S256');
 
-      const sessionData = { state, codeVerifier, status: 'pending' };
+      const sessionData = { state, codeVerifier, redirectUri, status: 'pending' };
       await env.AGENT_STATE.put('oauth:' + sessionId, JSON.stringify(sessionData), { expirationTtl: 600 });
       await env.AGENT_STATE.put('oauth_state:' + state, sessionId, { expirationTtl: 600 });
       
@@ -188,15 +191,12 @@ export default {
         return new Response(renderAuthUI('授权被拒', 'Auth Denied', '您已拒绝授权，请关闭此页。', 'You have denied authorization, you can close this page.', true), { headers: {'Content-Type':'text/html; charset=utf-8'} });
       }
 
-      const host = request.headers.get('x-forwarded-host') || request.headers.get('host');
-      const reqOrigin = host ? `${new URL(request.url).protocol}//${host}` : new URL(request.url).origin;
-
       const creds = btoa(`${env.X_CLIENT_ID}:${env.X_CLIENT_SECRET}`);
       const tokenRes = await fetch('https://api.twitter.com/2/oauth2/token', {
         method: 'POST',
         headers: { 'Content-Type': 'application/x-www-form-urlencoded', Authorization: `Basic ${creds}` },
         body: new URLSearchParams({
-          code: code || '', grant_type: 'authorization_code', redirect_uri: reqOrigin + '/callback',
+          code: code || '', grant_type: 'authorization_code', redirect_uri: session.redirectUri || url.origin + '/callback',
           code_verifier: session.codeVerifier, client_id: env.X_CLIENT_ID,
         }).toString(),
       });
