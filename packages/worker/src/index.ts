@@ -823,7 +823,7 @@ export default {
     </div>
 
     <div class="card wide" style="border-color:rgba(251,191,36,0.4)">
-      <h2 style="color:#fbbf24">⭐ <span class="lang-zh">VIP 用户规则</span><span class="lang-en">VIP User Rules</span></h2>
+      <h2 style="color:#fbbf24">❤️ <span class="lang-zh">特别用户规则</span><span class="lang-en">Special User Rules</span></h2>
       <p><span class="lang-zh">为指定用户设置单独的回复/点赞概率和备注 persona。这些用户会被优先置入时间线队列。</span><span class="lang-en">Set per-user reply/like probabilities and persona note. These users are prioritized in timeline engagement.</span></p>
       <table id="vip-table" style="width:100%;border-collapse:collapse;font-size:.82rem;margin:12px 0">
         <thead>
@@ -1316,6 +1316,16 @@ export default {
         const lastMentionId = await getLastMentionId(env, agentId);
         return json({ agentName: agent.agent_name, lastMentionId, autoEvo: agent.auto_evo });
       }
+      // ── Pro-only manual triggers ──────────────────────────────────────────────
+      // These routes require a valid (non-expired) Pro license on the backend.
+      const PRO_ROUTES = ['/api/agent/refresh-memory', '/api/agent/evolve', '/api/agent/trigger-timeline', '/api/agent/spontaneous'];
+      if (PRO_ROUTES.includes(pathname)) {
+        const proExpiresAt = (agent as any).pro_expires_at as number | null;
+        if (!proExpiresAt || proExpiresAt < Date.now()) {
+          return json({ ok: false, error: 'Pro license required / 需要有效的 Pro 授权码', pro_required: true }, 403);
+        }
+      }
+
       if (pathname === '/api/agent/refresh-memory') {
         try { return json({ ok: true, ...(await runMemoryRefresh(env, agent)) }); } catch (err) { return json({ ok: false, error: String(err) }, 500); }
       }
