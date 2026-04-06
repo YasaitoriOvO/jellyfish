@@ -17,13 +17,10 @@ async function getAllActiveAgents(env: Env): Promise<AgentDbRecord[]> {
   })) as unknown as AgentDbRecord[];
 }
 
-export default {
-  // ── Cron Triggers ────────────────────────────────────────────────────────────
-  async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
-    const cron = controller.cron;
-    console.log(`[worker] Cron triggered globally: ${cron}`);
+async function runScheduled(cron: string | undefined, env: Env, ctx: ExecutionContext): Promise<void> {
+  console.log(`[worker] Cron triggered globally: ${cron}`);
 
-    const agents = await getAllActiveAgents(env);
+  const agents = await getAllActiveAgents(env);
     console.log(`[worker] Executing for ${agents.length} active agents.`);
 
     const now = new Date();
@@ -63,6 +60,12 @@ export default {
         ctx.waitUntil(runNightlyEvolution(env, agent).catch(e => console.error(`[worker] nightly evolution error for ${agent.id}:`, e)));
       }
     }
+  }
+
+export default {
+  // ── Cron Triggers ────────────────────────────────────────────────────────────
+  async scheduled(controller: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
+    return runScheduled(controller.cron, env, ctx);
   },
 
   // ── HTTP Handler ──────────────────────────────────────────────────────────────
@@ -73,7 +76,7 @@ export default {
 
     // Fallback Ping Endpoint (if Cloudflare account hit max 5 crons limit)
     if (pathname === '/api/cron') {
-      ctx.waitUntil(this.scheduled({ cron: '* * * * *', type: 'cron', scheduledTime: Date.now() }, env, ctx));
+      ctx.waitUntil(runScheduled('* * * * *', env, ctx));
       return new Response('Cron executed via HTTP trigger', { status: 200 });
     }
 
