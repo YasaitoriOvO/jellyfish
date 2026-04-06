@@ -177,13 +177,13 @@ h3.section{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppe
 <!-- ── Step 3: Agent Identity ── -->
 <div class="step-panel" id="s3">
   <h2>🎭 Agent 身份</h2>
-  <div class="subtitle">Agent 的展示信息已根据您的授权账号自动读取，也可手动修改。</div>
+  <div class="subtitle">Agent 的核心身份信息已与您的授权 X 账号强绑定。</div>
   <div class="field"><label>展示名称</label>
-    <div class="hint">例：AI 水母（授权账号名：<span id="hintMyName">...</span>）</div>
-    <input type="text" id="agentName" placeholder="Agent 的昵称"></div>
+    <div class="hint">授权账号昵称：<span id="hintMyName">（正在获取...）</span></div>
+    <input type="text" id="agentName" placeholder="自动从您的身份提供者中读取" readonly disabled></div>
   <div class="field"><label>X @handle（不含 @）</label>
-    <div class="hint">例：amber_digit（授权账号：<span id="hintMyHandle">...</span>）</div>
-    <input type="text" id="agentHandle" placeholder="不含 @ 的纯字母用户名"></div>
+    <div class="hint">授权账号短柄：<span id="hintMyHandle">（正在获取...）</span></div>
+    <input type="text" id="agentHandle" placeholder="自动从您的身份提供者中读取" readonly disabled></div>
   <div class="field"><label>源账号（逗号分隔，不含 @）</label>
     <input type="text" id="sourceAccounts" placeholder="例：amber_medusozoa, amber_toffee">
     <div class="hint">将抓取这些账号的推文用于人格蒸馏。</div></div>
