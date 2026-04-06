@@ -209,15 +209,15 @@ export default {
     if (pathname === '/api/distill' && method === 'POST') {
       try {
         const reqJson = await request.json() as any;
-        const { sourceAccounts, accessToken } = reqJson;
-        const geminiApiKey = env.GEMINI_API_KEY;
-        const geminiModel = env.GEMINI_MODEL || "gemini-3.1-pro-preview";
+        const { sourceAccounts, accessToken, promptLang } = reqJson;
+        const geminiModel = env.GEMINI_MODEL || 'gemini-2.5-pro-preview-03-25';
+        const gatewayConfig = { accountId: env.CF_ACCOUNT_ID, gateway: env.CF_GATEWAY_NAME, apiKey: env.CF_AIG_TOKEN };
         
         const tweetsByAccount = await fetchSourceTweets(sourceAccounts, accessToken);
         const accountCount = Object.keys(tweetsByAccount).length;
         if (accountCount === 0) return json({ error: 'No tweets fetched. Check accounts/token.' }, 400);
         
-        const skill = await distillSkillFromTweets(tweetsByAccount, geminiApiKey, geminiModel, 'zh', env.CF_GATEWAY_URL);
+        const skill = await distillSkillFromTweets(tweetsByAccount, geminiModel, promptLang || 'zh', gatewayConfig);
         const fetched: Record<string, number> = {};
         for (const [k, v] of Object.entries(tweetsByAccount)) fetched[k] = v.length;
         return json({ skill, fetched });
@@ -228,9 +228,9 @@ export default {
       try {
         const reqJson = await request.json() as any;
         const { skill } = reqJson;
-        const geminiApiKey = env.GEMINI_API_KEY;
-        const geminiModel = env.GEMINI_MODEL || "gemini-3.1-pro-preview";
-        return json(await genSample(skill, geminiApiKey, geminiModel, env.CF_GATEWAY_URL));
+        const geminiModel = env.GEMINI_MODEL || 'gemini-2.5-pro-preview-03-25';
+        const gatewayConfig = { accountId: env.CF_ACCOUNT_ID, gateway: env.CF_GATEWAY_NAME, apiKey: env.CF_AIG_TOKEN };
+        return json(await genSample(skill, geminiModel, gatewayConfig));
       } catch (err) { return json({ error: String(err) }, 500); }
     }
 
@@ -238,17 +238,15 @@ export default {
       try {
         const reqJson = await request.json() as any;
         const { skill, feedback } = reqJson;
-        const geminiApiKey = env.GEMINI_API_KEY;
-        const geminiModel = env.GEMINI_MODEL || "gemini-3.1-pro-preview";
-        return json({ skill: await refineSkill(skill, feedback, geminiApiKey, geminiModel, env.CF_GATEWAY_URL) });
+        const geminiModel = env.GEMINI_MODEL || 'gemini-2.5-pro-preview-03-25';
+        const gatewayConfig = { accountId: env.CF_ACCOUNT_ID, gateway: env.CF_GATEWAY_NAME, apiKey: env.CF_AIG_TOKEN };
+        return json({ skill: await refineSkill(skill, feedback, geminiModel, gatewayConfig) });
       } catch (err) { return json({ error: String(err) }, 500); }
     }
 
     if (pathname === '/api/models' && method === 'GET') {
-      const key = url.searchParams.get('key') || env.GEMINI_API_KEY;
-      if (!key) return json({ error: 'Missing key' }, 400);
       try {
-        const models = await listGeminiModels(key, env.CF_GATEWAY_URL);
+        const models = await listGeminiModels();
         const filtered = models.filter(m => m.includes('gemini'));
         resSortModelsList(filtered);
         return json({ models: filtered });

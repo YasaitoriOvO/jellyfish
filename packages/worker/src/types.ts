@@ -61,12 +61,16 @@ export interface Env {
   X_CLIENT_SECRET: string;
   /** Secret value for protected admin endpoints (header or ?secret= param) */
   ADMIN_SECRET: string;
-  /** Gemini API Key (Now optional if using AI Gateway secret directly) */
+  /** Gemini API Key (已废弃，由 CF AI Gateway Token 接管) */
   GEMINI_API_KEY?: string;
-  /** Default Gemini Model Name */
+  /** Default Gemini Model Name, e.g. gemini-2.5-pro-preview-03-25 */
   GEMINI_MODEL?: string;
-  /** Cloudflare AI Gateway URL for Gemini overrides */
-  CF_GATEWAY_URL?: string;
+  /** Cloudflare Account ID (for AI Gateway) */
+  CF_ACCOUNT_ID: string;
+  /** Cloudflare AI Gateway Name */
+  CF_GATEWAY_NAME: string;
+  /** Cloudflare AI Gateway Token (generated in the Gateway dashboard) */
+  CF_AIG_TOKEN: string;
 }
 
 // ─── X API types ───────────────────────────────────────────────────────────────

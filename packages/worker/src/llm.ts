@@ -16,8 +16,9 @@ async function generate(
     contents,
     systemInstruction,
     { maxOutputTokens, temperature },
-    agent.gemini_api_key,
-    env.CF_GATEWAY_URL
+    undefined,
+    undefined,
+    { accountId: env.CF_ACCOUNT_ID, gateway: env.CF_GATEWAY_NAME, apiKey: env.CF_AIG_TOKEN }
   );
 }
 

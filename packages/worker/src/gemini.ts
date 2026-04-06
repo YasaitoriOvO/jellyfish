@@ -1,6 +1,23 @@
+import { createAiGateway } from 'ai-gateway-provider';
+import { createUnified } from 'ai-gateway-provider/providers/unified';
+import { generateText } from 'ai';
+
 export interface GeminiContent {
   role: 'user' | 'model';
   parts: { text: string }[];
+}
+
+// 将 Gemini-style contents 转为 AI SDK messages 格式
+function contentsToMessages(contents: GeminiContent[]): { role: 'user' | 'assistant'; content: string }[] {
+  return contents.map(c => ({
+    role: c.role === 'model' ? 'assistant' : 'user',
+    content: c.parts.map(p => p.text).join(''),
+  }));
+}
+
+// 构建 aigateway 实例（每次调用时根据 env 实时创建）
+function buildGateway(accountId: string, gateway: string, apiKey: string) {
+  return createAiGateway({ accountId, gateway, apiKey });
 }
 
 export async function fetchGemini(
@@ -8,38 +25,41 @@ export async function fetchGemini(
   contents: GeminiContent[],
   systemInstruction?: string,
   config?: { maxOutputTokens?: number; temperature?: number },
-  apiKey?: string,
-  gatewayUrl?: string
+  _legacyApiKey?: string,   // 保留签名兼容性，已废弃
+  _legacyGatewayUrl?: string, // 保留签名兼容性，已废弃
+  // 新增：从 env 传入的 Gateway 参数
+  gatewayConfig?: { accountId: string; gateway: string; apiKey: string }
 ): Promise<string> {
-  const base = gatewayUrl || "https://generativelanguage.googleapis.com/v1beta";
-  const urlPath = base.endsWith('/v1beta') ? base : `${base.replace(/\/+$/, '')}/v1beta`;
-  const endpoint = `${urlPath}/models/${model}:generateContent`;
-  
-  const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-  if (apiKey) headers['x-goog-api-key'] = apiKey;
+  if (!gatewayConfig) {
+    throw new Error('[gemini] gatewayConfig (accountId, gateway, apiKey) is required');
+  }
 
-  const payload: any = { contents };
-  if (systemInstruction) payload.systemInstruction = { parts: [{ text: systemInstruction }] };
-  if (config) payload.generationConfig = config;
+  const aigateway = buildGateway(gatewayConfig.accountId, gatewayConfig.gateway, gatewayConfig.apiKey);
+  const unified = createUnified();
 
-  const res = await fetch(endpoint, { method: 'POST', headers, body: JSON.stringify(payload) });
-  const data = await res.json() as any;
-  if (!res.ok) throw new Error(data.error?.message || JSON.stringify(data));
-  const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!text) throw new Error('Empty response from model');
+  // 将 "gemini-2.5-pro-preview-03-25" 转换为 "google/gemini-2.5-pro-preview-03-25"
+  const modelPath = model.startsWith('google/') ? model : `google/${model}`;
+
+  const messages = contentsToMessages(contents);
+
+  const { text } = await generateText({
+    model: aigateway(unified(modelPath)),
+    system: systemInstruction,
+    messages,
+    maxOutputTokens: config?.maxOutputTokens,
+    temperature: config?.temperature,
+  });
+
+  if (!text) throw new Error('[gemini] Empty response from model');
   return text.trim();
 }
 
-export async function listGeminiModels(apiKey?: string, gatewayUrl?: string): Promise<string[]> {
-  const base = gatewayUrl || "https://generativelanguage.googleapis.com/v1beta";
-  const urlPath = base.endsWith('/v1beta') ? base : `${base.replace(/\/+$/, '')}/v1beta`;
-  const endpoint = `${urlPath}/models`;
-
-  const headers: Record<string, string> = {};
-  if (apiKey) headers['x-goog-api-key'] = apiKey;
-
-  const res = await fetch(endpoint, { headers });
-  const data = await res.json() as any;
-  if (!res.ok) throw new Error(data.error?.message || JSON.stringify(data));
-  return (data.models || []).map((m: any) => m.name.replace('models/', '') as string);
+// listGeminiModels 在 AI Gateway 方案下不需要枚举，返回固定推荐列表
+export async function listGeminiModels(_apiKey?: string, _gatewayUrl?: string): Promise<string[]> {
+  return [
+    'gemini-2.5-pro-preview-03-25',
+    'gemini-2.0-flash',
+    'gemini-1.5-pro',
+    'gemini-1.5-flash',
+  ];
 }
