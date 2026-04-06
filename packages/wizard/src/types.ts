@@ -20,6 +20,7 @@ export interface AgentConfig {
   agentName: string;
   agentHandle: string;
   sourceAccounts: string[];
+  geminiModel: string;
   defaultReplyProbability: number;
   defaultLikeProbability: number;
   vipList: VipEntry[];

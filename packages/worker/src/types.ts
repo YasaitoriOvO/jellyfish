@@ -33,6 +33,8 @@ export interface AgentConfig {
   agentHandle: string;
   /** X accounts whose tweets were used to distill the persona (used for debug endpoint) */
   sourceAccounts: string[];
+  /** Gemini model identifier, e.g. "gemini-2.5-pro" */
+  geminiModel: string;
   /** 0–1 probability that the agent replies to a non-VIP mention (rest → <skip>) */
   defaultReplyProbability: number;
   /** 0–1 probability that the agent likes a non-VIP timeline tweet */

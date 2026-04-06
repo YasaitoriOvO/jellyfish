@@ -4,7 +4,8 @@ import type { Env, ConversationTurn, XTweet, InteractionMemory, VipEntry } from 
 import { getSkill } from './memory.ts';
 import { agentConfig } from './config.ts';
 
-const MODEL = 'gemini-2.5-pro-preview-03-25';
+
+
 
 // ─── Create a per-request GenAI client ────────────────────────────────────────
 function getClient(env: Env): GoogleGenAI {
@@ -22,7 +23,7 @@ async function generate(
   const ai = getClient(env);
 
   const response = await ai.models.generateContent({
-    model: MODEL,
+    model: agentConfig.geminiModel,
     contents,
     config: {
       systemInstruction,
@@ -30,6 +31,7 @@ async function generate(
       temperature,
     },
   });
+
 
   const candidate = response.candidates?.[0];
   const finishReason = candidate?.finishReason;

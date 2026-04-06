@@ -3,6 +3,7 @@
   "agentName": "MyAgent",
   "agentHandle": "your_x_handle",
   "sourceAccounts": ["example_account"],
+  "geminiModel": "gemini-2.5-pro",
   "defaultReplyProbability": 0.2,
   "defaultLikeProbability": 0.8,
   "vipList": [

@@ -8,11 +8,12 @@ import pc from 'picocolors';
 import { GoogleGenAI } from '@google/genai';
 
 const MAX_ROUNDS = 10;
-const MODEL = 'gemini-2.5-pro-preview-03-25';
+
 
 interface TuneInput {
   draftSkill: string;
   geminiApiKey: string;
+  geminiModel: string;
 }
 
 interface TuneResult {
@@ -20,18 +21,18 @@ interface TuneResult {
 }
 
 // ─── Generate a sample tweet + reply pair from the current skill ───────────────
-async function generateSample(skill: string, geminiApiKey: string): Promise<{ tweet: string; reply: string }> {
+async function generateSample(skill: string, geminiApiKey: string, geminiModel: string): Promise<{ tweet: string; reply: string }> {
   const ai = new GoogleGenAI({ apiKey: geminiApiKey });
 
   const tweetRes = await ai.models.generateContent({
-    model: MODEL,
+    model: geminiModel,
     contents: [{ role: 'user', parts: [{ text: '请用这个人设发一条自发推文（20字以内，不要解释）：' }] }],
     config: { systemInstruction: skill, maxOutputTokens: 200, temperature: 1.1 },
   });
   const tweet = tweetRes.text?.trim() ?? '（生成推文失败）';
 
   const replyRes = await ai.models.generateContent({
-    model: MODEL,
+    model: geminiModel,
     contents: [{
       role: 'user',
       parts: [{ text: '[@stranger] 说了:\n这你们华人都是一个怎么想的？\n\n请用这个人设回复这条推文（你可以输出 <skip> 来表示你懒得理他）：' }],
@@ -44,7 +45,7 @@ async function generateSample(skill: string, geminiApiKey: string): Promise<{ tw
 }
 
 // ─── Apply user feedback to refine the skill ──────────────────────────────────
-async function refineSkill(currentSkill: string, feedback: string, geminiApiKey: string): Promise<string> {
+async function refineSkill(currentSkill: string, feedback: string, geminiApiKey: string, geminiModel: string): Promise<string> {
   const ai = new GoogleGenAI({ apiKey: geminiApiKey });
 
   const systemInstruction = `你是一个人格配置文件编辑引擎。你会根据用户的反馈，精准地更新一份 Markdown 格式的 AI 人格配置文件（skill）。
@@ -65,7 +66,7 @@ ${feedback}
 请根据反馈更新人格配置并直接输出新版本：`;
 
   const res = await ai.models.generateContent({
-    model: MODEL,
+    model: geminiModel,
     contents: [{ role: 'user', parts: [{ text: prompt }] }],
     config: { systemInstruction, maxOutputTokens: 4000, temperature: 0.4 },
   });
@@ -74,7 +75,7 @@ ${feedback}
 }
 
 // ─── Main export ──────────────────────────────────────────────────────────────
-export async function tunePersona({ draftSkill, geminiApiKey }: TuneInput): Promise<TuneResult> {
+export async function tunePersona({ draftSkill, geminiApiKey, geminiModel }: TuneInput): Promise<TuneResult> {
   let currentSkill = draftSkill;
 
   for (let round = 1; round <= MAX_ROUNDS; round++) {
@@ -83,7 +84,7 @@ export async function tunePersona({ draftSkill, geminiApiKey }: TuneInput): Prom
 
     const spinner = p.spinner();
     spinner.start('Generating sample tweet and reply...');
-    const { tweet, reply } = await generateSample(currentSkill, geminiApiKey);
+    const { tweet, reply } = await generateSample(currentSkill, geminiApiKey, geminiModel);
     spinner.stop('Done');
 
     p.log.message('');
@@ -111,7 +112,7 @@ export async function tunePersona({ draftSkill, geminiApiKey }: TuneInput): Prom
 
     const refineSpinner = p.spinner();
     refineSpinner.start('Refining persona based on your feedback...');
-    currentSkill = await refineSkill(currentSkill, feedback, geminiApiKey);
+    currentSkill = await refineSkill(currentSkill, feedback, geminiApiKey, geminiModel);
     refineSpinner.stop(pc.green(`Round ${round} complete — persona updated`));
 
     if (round === MAX_ROUNDS) {
