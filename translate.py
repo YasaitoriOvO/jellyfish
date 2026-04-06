@@ -29,11 +29,11 @@ replacements = {
 
     # Step 3
     "<h2>�� Agent 身份</h2>": "<h2>🎭 Agent 身份 <span style='font-size:0.7em;color:var(--text-muted)'>/ Agent Identity</span></h2>",
-    "核心身份信息已与您的授权 X 账号强绑定。</div>": "核心身份信息已与您的授权 X 账号强绑定。 / Agent core identity is securely bound.</div>",
+    "核心身份信息已与你的授权 X 账号强绑定。</div>": "核心身份信息已与你的授权 X 账号强绑定。 / Agent core identity is securely bound.</div>",
     "<label>展示名称</label>": "<label>展示名称 / Display Name</label>",
     "授权账号昵称：": "授权账号昵称 / Auth Account Name: ",
     "（正在获取...）": "（正在获取... / fetching...）",
-    "自动从您的身份提供者中读取": "自动从您的身份提供者中读取 / Auto read from identity provider",
+    "自动从你的身份提供者中读取": "自动从你的身份提供者中读取 / Auto read from identity provider",
     "不含 @）</label>": "不含 @ / without @）</label>",
     "授权账号短柄：": "授权账号短柄 / Auth Account Handle: ",
     "逗号分隔，不含 @": "逗号分隔，不含 @ / comma separated, no @",

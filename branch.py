@@ -9,7 +9,7 @@ text = text.replace(
     '''  <!-- Step 0: Mode Selection -->
   <div class="step-panel active" id="s0">
     <h2>🌟 欢迎 / Welcome</h2>
-    <div class="subtitle">请选择您要进行的操作 / Please select an operation</div>
+    <div class="subtitle">请选择你要进行的操作 / Please select an operation</div>
     <div class="flex" style="flex-direction:column; gap:16px;">
       <button class="btn btn-primary" id="modeCreateBtn" style="padding: 24px; font-size: 1.1rem; height: auto;">🤖 创建并部署全功能 Agent<br><span style="font-size:0.8rem; opacity:0.8; font-weight:normal; margin-top:8px; display:inline-block;">完整定型、配置概率并激活后台巡逻进程<br>Deploy active agent to background daemon</span></button>
       <button class="btn btn-ghost" id="modeDistillBtn" style="padding: 24px; font-size: 1.1rem; border: 1px solid var(--primary); height: auto;">🔍 仅体验账号推文人格蒸馏<br><span style="font-size:0.8rem; opacity:0.8; font-weight:normal; margin-top:8px; display:inline-block;">免部署精简体验，提取任何人格化 Prompt<br>Distill persona system prompt only without deploying</span></button>
@@ -23,11 +23,11 @@ text = text.replace(
 # 2. Add identity section wrapper in Step 3
 text = text.replace(
     '''    <h2>🎭 Agent 身份 <span style='font-size:0.7em;color:var(--text-muted)'>/ Agent Identity</span></h2>
-    <div class="subtitle">核心身份信息已与您的授权 X 账号强绑定。 / Agent core identity is securely bound.</div>
+    <div class="subtitle">核心身份信息已与你的授权 X 账号强绑定。 / Agent core identity is securely bound.</div>
     
     <label>展示名称 / Display Name</label>''',
     '''    <div id="s3Title"><h2>🎭 Agent 身份 <span style='font-size:0.7em;color:var(--text-muted)'>/ Agent Identity</span></h2></div>
-    <div class="subtitle" id="s3Subtitle">核心身份信息已与您的授权 X 账号强绑定。 / Agent core identity is securely bound.</div>
+    <div class="subtitle" id="s3Subtitle">核心身份信息已与你的授权 X 账号强绑定。 / Agent core identity is securely bound.</div>
     <div id="identitySection">
     <label>展示名称 / Display Name</label>'''
 )
@@ -103,7 +103,7 @@ text = text.replace(
     } else {
       $('identitySection').style.display = 'block';
       $('s3Title').innerHTML = '<h2>🎭 Agent 身份 <span style="font-size:0.7em;color:var(--text-muted)">/ Agent Identity</span></h2>';
-      $('s3Subtitle').innerText = '核心身份信息已与您的授权 X 账号强绑定。 / Agent core identity is securely bound.';
+      $('s3Subtitle').innerText = '核心身份信息已与你的授权 X 账号强绑定。 / Agent core identity is securely bound.';
     }
   }
   

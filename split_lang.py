@@ -5,7 +5,7 @@ with open("packages/dashboard/src/pages/index.astro", "r", encoding="utf-8") as 
 
 replacements = {
     "🌟 欢迎 / Welcome": "<span class='lang-zh'>🌟 欢迎</span><span class='lang-en'>🌟 Welcome</span>",
-    "请选择您要进行的操作 / Please select an operation": "<span class='lang-zh'>请选择您要进行的操作</span><span class='lang-en'>Please select an operation</span>",
+    "请选择你要进行的操作 / Please select an operation": "<span class='lang-zh'>请选择你要进行的操作</span><span class='lang-en'>Please select an operation</span>",
     "🤖 创建并部署全功能 Agent<br><span style=\"font-size:0.8rem; opacity:0.8; font-weight:normal; margin-top:8px; display:inline-block;\">完整定型、配置概率并激活后台巡逻进程<br>Deploy active agent to background daemon</span>": "<span class='lang-zh block-lang'>🤖 创建并部署全功能 Agent<br><span style='font-size:0.8rem; opacity:0.8; font-weight:normal; margin-top:8px; display:block;'>完整定型、配置概率并激活后台巡逻进程</span></span><span class='lang-en block-lang'>🤖 Create & Deploy Agent<br><span style='font-size:0.8rem; opacity:0.8; font-weight:normal; margin-top:8px; display:block;'>Deploy active agent to background daemon</span></span>",
     "🔍 仅体验账号推文人格蒸馏<br><span style=\"font-size:0.8rem; opacity:0.8; font-weight:normal; margin-top:8px; display:inline-block;\">免部署精简体验，提取任何人格化 Prompt<br>Distill persona system prompt only without deploying</span>": "<span class='lang-zh block-lang'>🔍 仅体验账号推文人格蒸馏<br><span style='font-size:0.8rem; opacity:0.8; font-weight:normal; margin-top:8px; display:block;'>免部署精简体验，提取任何人格化 Prompt</span></span><span class='lang-en block-lang'>🔍 Distill Persona Only<br><span style='font-size:0.8rem; opacity:0.8; font-weight:normal; margin-top:8px; display:block;'>Distill persona system prompt only without deploying</span></span>",
 
@@ -34,11 +34,11 @@ replacements = {
     "填入 API Key 后点击按钮即可拉取该 Key 支持的所有可用模型。 / Enter API Key and click to fetch all available models.": "<span class='lang-zh'>填入 API Key 后点击按钮即可拉取该 Key 支持的所有可用模型。</span><span class='lang-en'>Enter API Key and click to fetch all available models.</span>",
     
     "<h2>🎭 Agent 身份</h2>": "<h2><span class='lang-zh'>🎭 Agent 身份</span><span class='lang-en'>🎭 Agent Identity</span></h2>",
-    "核心身份信息已与您的授权 X 账号强绑定。 / Agent core identity is securely bound.": "<span class='lang-zh'>核心身份信息已与您的授权 X 账号强绑定。</span><span class='lang-en'>Agent core identity is securely bound.</span>",
+    "核心身份信息已与你的授权 X 账号强绑定。 / Agent core identity is securely bound.": "<span class='lang-zh'>核心身份信息已与你的授权 X 账号强绑定。</span><span class='lang-en'>Agent core identity is securely bound.</span>",
     "<label>展示名称 / Display Name</label>": "<label><span class='lang-zh'>展示名称</span><span class='lang-en'>Display Name</span></label>",
     "授权账号昵称 / Auth Account Name: ": "<span class='lang-zh'>授权账号昵称: </span><span class='lang-en'>Auth Account Name: </span>",
     "（正在获取... / fetching...）": "<span class='lang-zh'>（正在获取...）</span><span class='lang-en'>(fetching...)</span>",
-    "placeholder=\"自动从您的身份提供者中读取 / Auto read from identity provider\"": "data-ph-zh=\"自动从您的身份提供者中读取\" data-ph-en=\"Auto read from identity provider\" placeholder=\"自动从您的身份提供者中读取\"",
+    "placeholder=\"自动从你的身份提供者中读取 / Auto read from identity provider\"": "data-ph-zh=\"自动从你的身份提供者中读取\" data-ph-en=\"Auto read from identity provider\" placeholder=\"自动从你的身份提供者中读取\"",
     "X @handle（不含 @ / without @）": "<span class='lang-zh'>X @handle（不含 @）</span><span class='lang-en'>X @handle (without @)</span>",
     "授权账号短柄 / Auth Account Handle: ": "<span class='lang-zh'>授权账号短柄: </span><span class='lang-en'>Auth Account Handle: </span>",
     "源账号（逗号分隔，不含 @ / comma separated, no @ / without @）": "<span class='lang-zh'>源账号（逗号分隔，不含 @）</span><span class='lang-en'>Source Accounts (comma separated, no @)</span>",
@@ -51,11 +51,11 @@ replacements = {
     "拉取推文，利用 LLM 配置生成 system prompt。 / Fetch tweets and generate system prompt.": "<span class='lang-zh'>拉取推文，利用 LLM 配置生成 system prompt。</span><span class='lang-en'>Fetch tweets and generate system prompt.</span>",
     "点击开始蒸馏后，后台将拉取最多一百条最近推文，并提取出此人的行文风格。 / Will extract writing style from recent tweets.": "<span class='lang-zh'>点击开始蒸馏后，后台将拉取最多一百条最近推文，并提取出此人的行文风格。</span><span class='lang-en'>Will fetch up to 100 recent tweets and extract writing style.</span>",
     "<label>配置生成语言 (Output Language)</label>": "<label><span class='lang-zh'>配置生成语言</span><span class='lang-en'>Output Language</span></label>",
-    "💡 强烈建议生成 <b>中文</b> 提示词。同等人格配置下，高度凝练的中文能为您日常运行 Agent 省下极可观的 System Prompt Token 费率！ / Highly recommend generating Chinese prompt to save costs!": "<span class='lang-zh'>💡 强烈建议生成 <b>中文</b> 提示词。同等人格配置下，高度凝练的中文能为您日常运行 Agent 省下极可观的 System Prompt Token 费率！</span><span class='lang-en'>💡 Highly recommend choosing <b>Chinese</b>. Highly condensed Chinese persona strings will save you tremendous Tokens!</span>",
+    "💡 强烈建议生成 <b>中文</b> 提示词。同等人格配置下，高度凝练的中文能为你日常运行 Agent 省下极可观的 System Prompt Token 费率！ / Highly recommend generating Chinese prompt to save costs!": "<span class='lang-zh'>💡 强烈建议生成 <b>中文</b> 提示词。同等人格配置下，高度凝练的中文能为你日常运行 Agent 省下极可观的 System Prompt Token 费率！</span><span class='lang-en'>💡 Highly recommend choosing <b>Chinese</b>. Highly condensed Chinese persona strings will save you tremendous Tokens!</span>",
     "🚀 开始一键蒸馏 / Start Distillation": "<span class='lang-zh'>🚀 开始一键蒸馏</span><span class='lang-en'>🚀 Start Distillation</span>",
     "正在疯狂蒸馏中（约需 10-30 秒）…… / Distilling (takes 10-30s)...": "<span class='lang-zh'>正在疯狂蒸馏中（约需 10-30 秒）……</span><span class='lang-en'>Distilling (takes 10-30s)...</span>",
     "<label>人格配置输出 / System Prompt Output</label>": "<label><span class='lang-zh'>人格配置输出 (System Prompt)</span><span class='lang-en'>System Prompt Output</span></label>",
-    "placeholder=\"蒸馏出的 persona_skill 会显示在这里，您可自由微调补充。可以跳过蒸馏，自己手写！ / Distilled persona_skill will show here, you can handwrite or edit it!\"": "data-ph-zh=\"蒸馏出的 persona_skill 会显示在这里，您可自由微调补充。可以跳过蒸馏，自己手写！\" data-ph-en=\"Distilled persona_skill will show here, you can handwrite or edit it!\" placeholder=\"蒸馏出的 persona_skill 会显示在这里，您可自由微调补充。可以跳过蒸馏，自己手写！\"",
+    "placeholder=\"蒸馏出的 persona_skill 会显示在这里，你可自由微调补充。可以跳过蒸馏，自己手写！ / Distilled persona_skill will show here, you can handwrite or edit it!\"": "data-ph-zh=\"蒸馏出的 persona_skill 会显示在这里，你可自由微调补充。可以跳过蒸馏，自己手写！\" data-ph-en=\"Distilled persona_skill will show here, you can handwrite or edit it!\" placeholder=\"蒸馏出的 persona_skill 会显示在这里，你可自由微调补充。可以跳过蒸馏，自己手写！\"",
 
     "<h2>🎯 样本调教 <span style='font-size:0.7em;color:var(--text-muted)'>/ Tuning</span></h2>": "<h2><span class='lang-zh'>🎯 样本调教</span><span class='lang-en'>🎯 Sample Tuning</span></h2>",
     "生成演练样本以调优 Agent 的发言。 / Generate practice samples to tune voice.": "<span class='lang-zh'>生成演练样本以调优 Agent 的发言。</span><span class='lang-en'>Generate practice samples to tune Agent's voice.</span>",
@@ -79,7 +79,7 @@ replacements = {
     "<label>白名单用户 / VIP List</label>": "<label><span class='lang-zh'>白名单用户</span><span class='lang-en'>VIP List</span></label>",
 
     "<h2>🚀 部署配置 <span style='font-size:0.7em;color:var(--text-muted)'>/ Deploy</span></h2>": "<h2><span class='lang-zh'>🚀 部署配置</span><span class='lang-en'>🚀 Deploy Config</span></h2>",
-    "最后确认并保存您的 Agent 以激活生命流。 / Final confirmation to save your Agent and activate its life stream.": "<span class='lang-zh'>最后确认并保存您的 Agent 以激活生命流。</span><span class='lang-en'>Final confirmation to save your Agent and activate its life stream.</span>",
+    "最后确认并保存你的 Agent 以激活生命流。 / Final confirmation to save your Agent and activate its life stream.": "<span class='lang-zh'>最后确认并保存你的 Agent 以激活生命流。</span><span class='lang-en'>Final confirmation to save your Agent and activate its life stream.</span>",
     "✨ 点燃灵魂火种 / Ignite Soul (Deploy Agent)": "<span class='lang-zh'>✨ 点燃灵魂火种</span><span class='lang-en'>✨ Ignite Soul (Deploy Agent)</span>",
 
     "['授权/Auth','Gemini','身份/Identity','蒸馏/Distill','调教/Tune','经济/Param','记忆/Memory','部署/Deploy']": "['<span class=\"lang-zh\">授权</span><span class=\"lang-en\">Auth</span>','Gemini','<span class=\"lang-zh\">身份</span><span class=\"lang-en\">Identity</span>','<span class=\"lang-zh\">蒸馏</span><span class=\"lang-en\">Distill</span>','<span class=\"lang-zh\">调教</span><span class=\"lang-en\">Tune</span>','<span class=\"lang-zh\">经济</span><span class=\"lang-en\">Economy</span>','<span class=\"lang-zh\">记忆</span><span class=\"lang-en\">Memory</span>','<span class=\"lang-zh\">部署</span><span class=\"lang-en\">Deploy</span>']",
@@ -96,7 +96,7 @@ replacements = {
     "回复 / Reply ": "<span class='lang-zh'>回复</span><span class='lang-en'>Reply</span> ",
     
     "🎉 <b>Agent 部署成功！ / Agent Deployed Successfully!</b><br><br>": "🎉 <b><span class='lang-zh'>Agent 部署成功！</span><span class='lang-en'>Agent Deployed Successfully!</span></b><br><br>",
-    "您的 Agent 已储存于 SaaS 数据中心并开始自动巡逻。点击下方进入专属 Dashboard：<br>\n    Your Agent is stored in the SaaS datacenter and has started auto-patrol. Click below to enter your exclusive Dashboard:<br>": "<span class='lang-zh'>您的 Agent 已储存于 SaaS 数据中心并开始自动巡逻。点击下方进入专属 Dashboard：</span><span class='lang-en'>Your Agent is stored in the SaaS datacenter and has started auto-patrol. Click below to enter your exclusive Dashboard:</span><br>",
+    "你的 Agent 已储存于 SaaS 数据中心并开始自动巡逻。点击下方进入专属 Dashboard：<br>\n    Your Agent is stored in the SaaS datacenter and has started auto-patrol. Click below to enter your exclusive Dashboard:<br>": "<span class='lang-zh'>你的 Agent 已储存于 SaaS 数据中心并开始自动巡逻。点击下方进入专属 Dashboard：</span><span class='lang-en'>Your Agent is stored in the SaaS datacenter and has started auto-patrol. Click below to enter your exclusive Dashboard:</span><br>",
     "进入控制台 / Enter Dashboard</a>": "<span class='lang-zh'>进入控制台</span><span class='lang-en'>Enter Dashboard</span></a>",
 
     "✅ 蒸馏成功！ / Distillation Successful!": "<span class='lang-zh'>✅ 蒸馏成功！</span><span class='lang-en'>✅ Distillation Successful!</span>",

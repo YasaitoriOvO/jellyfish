@@ -204,6 +204,22 @@ const { title } = Astro.props;
     box-shadow: 0 0 0 3px var(--primary-glow);
   }
 
+  /* Hide native number spinner arrows; paint a subtle tinted right strip instead */
+  input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+    padding-right: 10px;
+    border-right: 3px solid rgba(193, 147, 155, 0.35);
+  }
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"]:focus {
+    border-right-color: var(--primary);
+  }
+
   input:disabled, input[readonly] {
     background: rgba(255, 255, 255, 0.03);
     color: var(--text-muted);
@@ -414,6 +430,24 @@ const { title } = Astro.props;
     padding: 2px 6px;
     border-radius: 4px;
     color: #a78bfa;
+  }
+
+  /* Global scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(193, 147, 155, 0.25);
+    border-radius: 99px;
+    transition: background 0.2s;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(193, 147, 155, 0.5); }
+  * { scrollbar-width: thin; scrollbar-color: rgba(193,147,155,0.25) transparent; }
+
+  /* Step nav scrollbar (override to be thinner) */
+  .step-nav::-webkit-scrollbar { height: 3px; }
+  .step-nav::-webkit-scrollbar-thumb {
+    background: rgba(193,147,155,0.2);
+    border-radius: 99px;
   }
 
 </style>

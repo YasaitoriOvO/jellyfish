@@ -4,6 +4,7 @@ import { getMe, getUserByUsername, getUserTweets } from './twitter.ts';
 import { getLastMentionId, getCachedOwnUserId, getInteractionsMemory, getActivityLog } from './memory.ts';
 import { fetchSourceTweets, distillSkillFromTweets, genSample, refineSkill } from './builder.ts';
 import { listGeminiModels } from './gemini.ts';
+import { getValidAccessToken } from './auth.ts';
 
 async function getAllActiveAgents(env: Env): Promise<AgentDbRecord[]> {
   const { results } = await env.DB.prepare('SELECT * FROM agents WHERE status = "active"').all();
@@ -191,7 +192,7 @@ export default {
       if (error) {
         session.status = 'error'; session.error = error;
         await env.AGENT_STATE.put('oauth:' + sessionId, JSON.stringify(session), { expirationTtl: 600 });
-        return new Response(renderAuthUI('授权被拒', 'Auth Denied', '您已拒绝授权，请关闭此页。', 'You have denied authorization, you can close this page.', true), { headers: {'Content-Type':'text/html; charset=utf-8'} });
+        return new Response(renderAuthUI('授权被拒', 'Auth Denied', '你已拒绝授权，请关闭此页。', 'You have denied authorization, you can close this page.', true), { headers: {'Content-Type':'text/html; charset=utf-8'} });
       }
 
       const creds = btoa(`${env.X_CLIENT_ID}:${env.X_CLIENT_SECRET}`);
@@ -226,7 +227,7 @@ export default {
 
       const successSub = session.agentId
         ? '授权已更新，新的 Refresh Token 现已生效。请关闭此页。'
-        : '您的 X 账号已成功关联。请回到原部署向导页。';
+        : '你的 X 账号已成功关联。请回到原部署向导页。';
       const successSubEn = session.agentId
         ? 'Authorization updated. New Refresh Token is now active. You can close this page.'
         : 'Your X account is successfully linked. Please return to the wizard.';
@@ -357,39 +358,80 @@ export default {
         const geminiApiKey = env.GEMINI_API_KEY || reqJson.geminiApiKey || '';
         const dashboardSecret = reqJson.dashboardSecret || '';
 
-        const agentId = crypto.randomUUID();
-        const ownerId = "public";
-
         const vipList = config.vipList ?? [];
         const memWhitelist = config.memoryWhitelist ?? [];
+        const handle = (config.agentHandle ?? '').trim().toLowerCase();
 
-        await env.DB.prepare(`
-          INSERT INTO agents (
-            id, owner_id, agent_name, agent_handle, agent_secret, source_accounts, gemini_model, gemini_api_key, 
-            refresh_token, access_token, token_expires_at, skill_text, reply_pct, like_pct, 
-            cooldown_days, auto_evo, vip_list, mem_whitelist, created_at, status
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, null, 0, ?, ?, ?, ?, ?, ?, ?, ?, 'active')
-        `).bind(
-          agentId, ownerId,
-          config.agentName ?? '',
-          config.agentHandle ?? '',
-          dashboardSecret,
-          JSON.stringify(config.sourceAccounts ?? []),
-          config.geminiModel ?? 'gemini-2.5-pro',
-          geminiApiKey,
-          refreshToken ?? '',
-          skill ?? '',
-          config.defaultReplyProbability ?? 0.2,
-          config.defaultLikeProbability ?? 0.8,
-          config.spontaneousCooldownDays ?? 3,
-          config.enableNightlyEvolution ? 1 : 0,
-          JSON.stringify(vipList),
-          memWhitelist === 'all' ? 'all' : JSON.stringify(memWhitelist),
-          Date.now()
-        ).run();
+        // ── Upsert: if agent with same handle already exists, overwrite it ──
+        let agentId = '';
+        let isUpdate = false;
 
-        // return the dashboard link!
-        return json({ success: true, agentId, redirect: `/dashboard?id=${agentId}` });
+        if (handle) {
+          const existing = await env.DB.prepare(
+            'SELECT id FROM agents WHERE LOWER(agent_handle) = ? LIMIT 1'
+          ).bind(handle).first<{ id: string }>();
+
+          if (existing) {
+            agentId = existing.id;
+            isUpdate = true;
+            await env.DB.prepare(`
+              UPDATE agents SET
+                agent_name = ?, agent_handle = ?, agent_secret = ?,
+                source_accounts = ?, gemini_model = ?, gemini_api_key = ?,
+                refresh_token = ?, access_token = null, token_expires_at = 0,
+                skill_text = ?, reply_pct = ?, like_pct = ?,
+                cooldown_days = ?, auto_evo = ?, vip_list = ?, mem_whitelist = ?,
+                status = 'active'
+              WHERE id = ?
+            `).bind(
+              config.agentName ?? '',
+              config.agentHandle ?? '',
+              dashboardSecret || undefined,   // keep old secret if not provided
+              JSON.stringify(config.sourceAccounts ?? []),
+              config.geminiModel ?? 'gemini-2.5-pro',
+              geminiApiKey,
+              refreshToken ?? '',
+              skill ?? '',
+              config.defaultReplyProbability ?? 0.2,
+              config.defaultLikeProbability ?? 0.8,
+              config.spontaneousCooldownDays ?? 3,
+              config.enableNightlyEvolution ? 1 : 0,
+              JSON.stringify(vipList),
+              memWhitelist === 'all' ? 'all' : JSON.stringify(memWhitelist),
+              agentId,
+            ).run();
+          }
+        }
+
+        if (!isUpdate) {
+          agentId = crypto.randomUUID();
+          await env.DB.prepare(`
+            INSERT INTO agents (
+              id, owner_id, agent_name, agent_handle, agent_secret, source_accounts, gemini_model, gemini_api_key, 
+              refresh_token, access_token, token_expires_at, skill_text, reply_pct, like_pct, 
+              cooldown_days, auto_evo, vip_list, mem_whitelist, created_at, status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, null, 0, ?, ?, ?, ?, ?, ?, ?, ?, 'active')
+          `).bind(
+            agentId, 'public',
+            config.agentName ?? '',
+            config.agentHandle ?? '',
+            dashboardSecret,
+            JSON.stringify(config.sourceAccounts ?? []),
+            config.geminiModel ?? 'gemini-2.5-pro',
+            geminiApiKey,
+            refreshToken ?? '',
+            skill ?? '',
+            config.defaultReplyProbability ?? 0.2,
+            config.defaultLikeProbability ?? 0.8,
+            config.spontaneousCooldownDays ?? 3,
+            config.enableNightlyEvolution ? 1 : 0,
+            JSON.stringify(vipList),
+            memWhitelist === 'all' ? 'all' : JSON.stringify(memWhitelist),
+            Date.now()
+          ).run();
+        }
+
+        return json({ success: true, agentId, updated: isUpdate, redirect: `/dashboard?id=${agentId}` });
       } catch (err) { return json({ error: String(err) }, 500); }
     }
 
@@ -458,11 +500,21 @@ export default {
     /* Form elements */
     input[type=text],input[type=number],input[type=password],textarea{width:100%;background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);padding:10px 14px;border-radius:10px;font-size:.88rem;font-family:inherit;transition:all .2s;margin-top:6px}
     input[type=text]:focus,input[type=number]:focus,input[type=password]:focus,textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-glow)}
+    /* Number spinner: hide native arrows, accent right border */
+    input[type=number]{-moz-appearance:textfield;appearance:textfield;padding-right:10px;border-right:3px solid rgba(193,147,155,0.35)}
+    input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+    input[type=number]:focus{border-right-color:var(--primary)}
     textarea{min-height:300px;resize:vertical;font-family:'JetBrains Mono',monospace;font-size:.8rem}
     label{display:block;font-weight:500;font-size:.85rem;color:#e4e4e7;margin-top:14px}
     .cfg-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px}
     /* Output */
     #output{margin-top:20px;background:rgba(0,0,0,0.4);border:1px solid var(--input-border);border-radius:12px;padding:16px;white-space:pre-wrap;font-family:'JetBrains Mono',monospace;font-size:.78rem;color:#86efac;min-height:80px;display:none;line-height:1.6}
+    /* Global scrollbar */
+    ::-webkit-scrollbar{width:6px;height:6px}
+    ::-webkit-scrollbar-track{background:transparent}
+    ::-webkit-scrollbar-thumb{background:rgba(193,147,155,0.25);border-radius:99px}
+    ::-webkit-scrollbar-thumb:hover{background:rgba(193,147,155,0.5)}
+    *{scrollbar-width:thin;scrollbar-color:rgba(193,147,155,0.25) transparent}
     /* VIP */
     .vip-chip{display:inline-block;padding:.1rem .45rem;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.2);border-radius:4px;color:#fbbf24;margin:.15rem;font-size:.75rem}
     /* Status */
@@ -507,8 +559,8 @@ export default {
       <button id="langToggle" class="btn btn-ghost" style="height:36px;padding:0 14px;font-size:.82rem">🌐 English</button>
       <a href="/" class="btn btn-ghost" style="height:36px;padding:0 14px;font-size:.82rem">← <span class="lang-zh">首页</span><span class="lang-en">Home</span></a>
     </div>
-    <h1>${agent.agent_name} <span class="text-gradient">Dashboard</span></h1>
-    <div class="sub">@${agent.agent_handle} · <span class="lang-zh">Agent ID:</span><span class="lang-en">Agent ID:</span> <code style="font-size:.78rem;opacity:.7">${agentId}</code></div>
+    <h1 id="dash-name"><span style="opacity:.4">...</span> <span class="text-gradient">Dashboard</span></h1>
+    <div class="sub" id="dash-sub"><span style="opacity:.4">@... · </span><span class="lang-zh">Agent ID:</span><span class="lang-en">Agent ID:</span> <code style="font-size:.78rem;opacity:.7">${agentId}</code></div>
     ${vipList.length > 0 ? `<div style="margin-top:8px">${vipList.map((v: any) => `<span class="vip-chip">@${v.username}${v.persona ? ` · ${v.persona}` : ''}</span>`).join('')}</div>` : ''}
   </header>
 
@@ -626,6 +678,7 @@ export default {
     if (d.ok) {
       document.getElementById('auth-gate').style.display = 'none';
       document.getElementById('dashboard').style.display = 'block';
+      fetchTwitterIdentity();
     } else {
       var err = document.getElementById('auth-err');
       err.style.display = 'block';
@@ -651,6 +704,7 @@ export default {
       sessionStorage.setItem('dashSecret', secret);
       document.getElementById('auth-gate').style.display = 'none';
       document.getElementById('dashboard').style.display = 'block';
+      fetchTwitterIdentity();
     } else if (fromInput) {
       var err = document.getElementById('auth-err');
       err.style.display = 'block';
@@ -661,6 +715,24 @@ export default {
   document.getElementById('secret-input')?.addEventListener('keydown', function(e) {
     if (e.key === 'Enter') doAuthSecret();
   });
+
+  // ── Fetch Twitter identity (name / handle) from server after auth ──────
+  async function fetchTwitterIdentity() {
+    try {
+      var r = await fetch('/api/agent/twitter-identity?id=${agentId}');
+      var d = await r.json();
+      if (d.name) {
+        document.getElementById('dash-name').innerHTML =
+          d.name + ' <span class="text-gradient">Dashboard</span>';
+      }
+      if (d.username) {
+        document.getElementById('dash-sub').innerHTML =
+          '@' + d.username +
+          ' &middot; <span class="lang-zh">Agent ID:</span><span class="lang-en">Agent ID:</span>' +
+          ' <code style="font-size:.78rem;opacity:.7">${agentId}</code>';
+      }
+    } catch(e) { console.warn('[dashboard] identity fetch failed:', e); }
+  }
 
   // ── Language toggle ───────────────────────────────────────────────────────
   (function() {
@@ -891,6 +963,23 @@ export default {
           await env.DB.prepare('UPDATE agents SET agent_secret=? WHERE id=?').bind(secret, agentId).run();
           return json({ ok: true });
         } catch (err) { return json({ ok: false, error: String(err) }, 500); }
+      }
+      if (pathname === '/api/agent/twitter-identity') {
+        try {
+          const accessToken = await getValidAccessToken(env, agent);
+          const meRes = await fetch('https://api.twitter.com/2/users/me', {
+            headers: { Authorization: `Bearer ${accessToken}` }
+          });
+          if (!meRes.ok) throw new Error(`Twitter API ${meRes.status}: ${await meRes.text()}`);
+          const meData = await meRes.json() as any;
+          const twitterName: string = meData.data?.name ?? '';
+          const twitterHandle: string = meData.data?.username ?? '';
+          if (twitterName || twitterHandle) {
+            await env.DB.prepare('UPDATE agents SET agent_name=?, agent_handle=? WHERE id=?')
+              .bind(twitterName, twitterHandle, agentId).run();
+          }
+          return json({ name: twitterName, username: twitterHandle });
+        } catch (err) { return json({ error: String(err) }, 500); }
       }
       return json({ error: 'Unknown agent action' }, 404);
     }
