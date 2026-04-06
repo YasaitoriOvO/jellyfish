@@ -7,7 +7,7 @@
   "scripts": {
     "wizard": "pnpm --filter wizard start",
     "dev": "pnpm --filter worker wrangler dev",
-    "deploy": "pnpm --filter worker wrangler deploy",
+    "deploy": "pnpm --filter worker run deploy",
     "typecheck": "pnpm --filter worker run typecheck"
   }
 }
