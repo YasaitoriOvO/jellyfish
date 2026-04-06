@@ -61,6 +61,12 @@ export interface Env {
   X_CLIENT_SECRET: string;
   /** Secret value for protected admin endpoints (header or ?secret= param) */
   ADMIN_SECRET: string;
+  /** Gemini API Key */
+  GEMINI_API_KEY: string;
+  /** Default Gemini Model Name */
+  GEMINI_MODEL?: string;
+  /** Cloudflare AI Gateway URL for Gemini overrides */
+  CF_GATEWAY_URL?: string;
 }
 
 // ─── X API types ───────────────────────────────────────────────────────────────

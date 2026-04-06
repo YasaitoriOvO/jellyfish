@@ -41,33 +41,7 @@ import Layout from '../layouts/Layout.astro';
     <div id="err1" class="alert alert-error"></div>
     <div class="flex justify-between mt-8">
       <button class="btn btn-ghost btn-back" data-step="0"><span class="lang-zh">← 返回</span><span class="lang-en">← Back</span></button>
-      <button class="btn btn-primary" id="s1next" disabled><span class="lang-zh">下一步 →</span><span class="lang-en">Next →</span></button>
-    </div>
-  </div>
-
-  <!-- Step 2: Gemini -->
-  <div class="step-panel" id="s2">
-    <h2><span class="lang-zh">⚡ Gemini 配置</span><span class="lang-en">⚡ Gemini Config</span></h2>
-    <div class="subtitle"><span class="lang-zh">输入你的 Gemini API Key 和模型名称。</span><span class="lang-en">Enter your Gemini API Key and Model Name.</span></div>
-    
-    <label>Gemini API Key</label>
-    <input type="password" id="geminiKey" placeholder="AIza...">
-    
-    <label><span class="lang-zh">模型名称</span><span class="lang-en">Model Name</span></label>
-    <div class="flex gap-2">
-      <select id="geminiModelSelect" style="flex:1">
-        <option value="" disabled selected data-text-zh="👉 请点右侧拉取列表 或 选择下方填入" data-text-en="👉 Click right to fetch or select below">👉 请点右侧拉取列表 或 选择下方填入</option>
-        <option value="_custom_" data-text-zh="✍️ 手动输入..." data-text-en="✍️ Manual input...">✍️ 手动输入...</option>
-      </select>
-      <input type="text" id="geminiModelCustom" style="display:none;flex:1" value="" data-ph-zh="填入具体的模型名..." data-ph-en="Enter specific model name..." placeholder="填入具体的模型名...">
-      <button class="btn btn-ghost" id="fetchModelsBtn" style="margin-top: 8px;"><span class="lang-zh">点此拉取列表</span><span class="lang-en">Fetch List</span></button>
-    </div>
-    <p class="hint"><span class="lang-zh">填入 API Key 后点击按钮即可拉取该 Key 支持的所有可用模型。</span><span class="lang-en">Enter API Key and click to fetch all available models.</span></p>
-    
-    <div id="err2" class="alert alert-error"></div>
-    <div class="flex justify-between mt-8">
-      <button class="btn btn-ghost btn-back" data-step="1"><span class="lang-zh">← 返回</span><span class="lang-en">← Back</span></button>
-      <button class="btn btn-primary btn-next" data-step="3"><span class="lang-zh">下一步 →</span><span class="lang-en">Next →</span></button>
+      <button class="btn btn-primary btn-next" id="s1next" data-step="3" disabled><span class="lang-zh">下一步 →</span><span class="lang-en">Next →</span></button>
     </div>
   </div>
 
@@ -92,7 +66,7 @@ import Layout from '../layouts/Layout.astro';
     
     <div id="err3" class="alert alert-error"></div>
     <div class="flex justify-between mt-8">
-      <button class="btn btn-ghost btn-back" data-step="2"><span class="lang-zh">← 返回</span><span class="lang-en">← Back</span></button>
+      <button class="btn btn-ghost btn-back" data-step="1"><span class="lang-zh">← 返回</span><span class="lang-en">← Back</span></button>
       <button class="btn btn-primary btn-next" data-step="4"><span class="lang-zh">下一步 →</span><span class="lang-en">Next →</span></button>
     </div>
   </div>
@@ -238,8 +212,8 @@ const S = {
   enableEvo:true,
 };
 
-const STEPS_CREATE = ['<span class="lang-zh">授权</span><span class="lang-en">Auth</span>','Gemini','<span class="lang-zh">身份</span><span class="lang-en">Identity</span>','<span class="lang-zh">蒸馏</span><span class="lang-en">Distill</span>','<span class="lang-zh">调教</span><span class="lang-en">Tune</span>','<span class="lang-zh">经济</span><span class="lang-en">Economy</span>','<span class="lang-zh">记忆</span><span class="lang-en">Memory</span>','<span class="lang-zh">部署</span><span class="lang-en">Deploy</span>'];
-const STEPS_DISTILL = ['<span class="lang-zh">授权</span><span class="lang-en">Auth</span>','Gemini','<span class="lang-zh">目标</span><span class="lang-en">Target</span>','<span class="lang-zh">蒸馏</span><span class="lang-en">Distill</span>','<span class="lang-zh">调教</span><span class="lang-en">Tune</span>'];
+const STEPS_CREATE = ['<span class="lang-zh">授权</span><span class="lang-en">Auth</span>','<span class="lang-zh">身份</span><span class="lang-en">Identity</span>','<span class="lang-zh">蒸馏</span><span class="lang-en">Distill</span>','<span class="lang-zh">调教</span><span class="lang-en">Tune</span>','<span class="lang-zh">经济</span><span class="lang-en">Economy</span>','<span class="lang-zh">记忆</span><span class="lang-en">Memory</span>','<span class="lang-zh">部署</span><span class="lang-en">Deploy</span>'];
+const STEPS_DISTILL = ['<span class="lang-zh">授权</span><span class="lang-en">Auth</span>','<span class="lang-zh">目标</span><span class="lang-en">Target</span>','<span class="lang-zh">蒸馏</span><span class="lang-en">Distill</span>','<span class="lang-zh">调教</span><span class="lang-en">Tune</span>'];
 
 function buildNav() {
   if (S.step === 0) { $('stepNav').innerHTML = ''; return; }
@@ -294,23 +268,12 @@ async function go(n) {
 function validate(step) {
   if (S.mode === 'distill' && step >= 5) return true; // safety
   if (step === 1 && !S.refreshToken) { showErr('err1', '<span class="lang-zh">请先完成授权或填入 Refresh Token</span><span class="lang-en">Please complete Auth or input Refresh Token</span>'); return false; }
-  if (step === 2) {
-    let mode = $('geminiModelSelect').style.display !== 'none' ? $('geminiModelSelect').value : $('geminiModelCustom').value;
-    if (mode === '_custom_' && !$('geminiModelCustom').value.trim()) { showErr('err2','<span class="lang-zh">请输入模型名称</span><span class="lang-en">Please enter a model name</span>'); return false; }
-    if (mode !== '_custom_') $('geminiModelCustom').value = mode; 
-    if (!$('geminiKey').value.trim()) { showErr('err2','<span class="lang-zh">请输入 Gemini API Key</span><span class="lang-en">Please enter Gemini API Key</span>'); return false; }
-    if (!$('geminiModelCustom').value.trim()) { showErr('err2','<span class="lang-zh">请输入模型名称</span><span class="lang-en">Please enter a model name</span>'); return false; }
-  }
   if (step === 3) {
     if (!$('sourceAccounts').value.trim()) { showErr('err3','<span class="lang-zh">请输入至少一个源账号</span><span class="lang-en">Please enter at least one source account</span>'); return false; }
   }
   if (step === 4 && !$('skillText').value.trim()) { showErr('err4','<span class="lang-zh">请等待蒸馏完成或手动填入人格配置</span><span class="lang-en">Wait for distillation or enter persona</span>'); return false; }
   
   // collect
-  if (step === 2) { 
-    S.geminiKey = $('geminiKey').value.trim(); 
-    S.geminiModel = $('geminiModelCustom').value.trim(); 
-  }
   if (step === 3) {
     S.agentName = $('agentName').value.trim();
     S.agentHandle = $('agentHandle').value.trim();
@@ -423,42 +386,7 @@ async function fetchIdentityHint() {
   }
 }
 
-// Models
-$('geminiModelSelect').addEventListener('change', () => {
-  if ($('geminiModelSelect').value === '_custom_') {
-    $('geminiModelSelect').style.display = 'none';
-    $('geminiModelCustom').style.display = 'block';
-    $('geminiModelCustom').focus();
-  }
-});
-
-$('fetchModelsBtn').addEventListener('click', async () => {
-  const key = $('geminiKey').value.trim();
-  if (!key) { showErr('err2', '请先输入 API Key'); return; }
-  clearErr('err2');
-  const btn = $('fetchModelsBtn');
-  btn.disabled = true; btn.textContent = '拉取中...';
-  try {
-    const r = await api('/api/models?key=' + encodeURIComponent(key));
-    btn.disabled = false; btn.textContent = '点此拉取列表';
-    if (r.error) { showErr('err2', r.error); return; }
-    if (r.models && r.models.length > 0) {
-      let html = r.models.map(m => `<option value="${m}">${m}</option>`).join('');
-      html += `<option disabled>───────────────</option><option value="_custom_" data-text-zh="✍️ 手动输入其它..." data-text-en="✍️ Manual input...">✍️ 手动输入其它...</option>`;
-      $('geminiModelSelect').innerHTML = html;
-      $('geminiModelSelect').style.display = 'block';
-      $('geminiModelCustom').style.display = 'none';
-      if (!$('geminiModelCustom').value || $('geminiModelCustom').value === 'gemini-2.5-pro') {
-          $('geminiModelSelect').value = r.models[0];
-      }
-      showErr('err2', `✅ 成功拉取 ${r.models.length} 个模型 (已展开到列表)`);
-      $('err2').className = 'alert alert-success show';
-    } else { showErr('err2', '未找到可用的模型'); }
-  } catch (err) {
-    btn.disabled = false; btn.textContent = '点此拉取列表';
-    showErr('err2', String(err));
-  }
-});
+// skip models UI fetcher logic as element was deleted
 
 // Distill
 $('startDistillBtn').addEventListener('click', async () => {
@@ -468,8 +396,6 @@ $('startDistillBtn').addEventListener('click', async () => {
   const payload = {
     sourceAccounts: $('sourceAccounts').value.split(',').map(s=>s.trim()).filter(Boolean),
     accessToken: S.accessToken,
-    geminiApiKey: S.geminiKey,
-    geminiModel: S.geminiModel,
     promptLang: document.querySelector('input[name="pLang"]:checked').value
   };
   const r = await api('/api/distill', payload);
@@ -490,18 +416,22 @@ $('startDistillBtn').addEventListener('click', async () => {
 // Tune
 $('genSampleBtn').addEventListener('click', async () => {
   $('sampleLoading').style.display = 'flex'; $('genSampleBtn').disabled = true;
-  const payload = { skill: $('skillText').value, geminiApiKey: S.geminiKey, geminiModel: S.geminiModel };
+  const payload = { skill: $('skillText').value };
   const r = await api('/api/tune/sample', payload);
   $('sampleLoading').style.display = 'none'; $('genSampleBtn').disabled = false;
   
   if (r.error) { $('sampleRes').innerHTML = `<div style="color:var(--error)">❌ ${r.error}</div>`; return; }
   let h = '';
-  r.samples.forEach(s => {
+  if (r.tweet) {
     h += `<div style="margin-top:16px;background:var(--input-bg);padding:12px;border-radius:12px;">`;
-    if (s.type === 'spontaneous') { h += `<div style="font-size:12px;color:var(--primary)"><span class="lang-zh">✏️ 自发推文</span><span class="lang-en">✏️ Spontaneous Tweet</span></div><div>${s.text}</div>`; }
-    else { h += `<div style="font-size:12px;color:var(--primary)"><span class="lang-zh">💬 互动回复</span><span class="lang-en">💬 Interactive Reply</span></div><div style="font-size:13px;color:var(--text-muted)">Context: ${s.context}</div><div style="margin-top:8px">${s.text}</div>`; }
+    h += `<div style="font-size:12px;color:var(--primary)"><span class="lang-zh">✏️ 自发推文</span><span class="lang-en">✏️ Spontaneous Tweet</span></div><div style="margin-top:8px">${r.tweet}</div>`;
     h += `</div>`;
-  });
+  }
+  if (r.reply) {
+    h += `<div style="margin-top:16px;background:var(--input-bg);padding:12px;border-radius:12px;">`;
+    h += `<div style="font-size:12px;color:var(--primary)"><span class="lang-zh">💬 互动回复</span><span class="lang-en">💬 Interactive Reply</span></div><div style="font-size:13px;color:var(--text-muted)">Context: [@stranger] 说了: 这你们华人都是一个怎么想的？</div><div style="margin-top:8px">${r.reply}</div>`;
+    h += `</div>`;
+  }
   $('sampleRes').innerHTML = h;
 });
 
@@ -514,8 +444,9 @@ $('memMode').addEventListener('change', () => {
 function renderSummary() {
   const html = `
     <li><strong><span class="lang-zh">授权账号</span><span class="lang-en">Auth Account</span>:</strong> @${S.agentHandle}</li>
-    <li><strong><span class="lang-zh">模型配置</span><span class="lang-en">Model Config</span>:</strong> ${S.geminiModel}</li>
-    <li><strong><span class="lang-zh">源账号</span><span class="lang-en">Source Accounts</span>:</strong> ${S.sourceAccounts.join(', ')}</li>
+    <p style="margin-top:24px;font-size:14px;color:var(--text-muted)">
+      <span class="lang-zh">Gemini 模型配置将通过平台环境变量读取。</span><span class="lang-en">Gemini Model Config is now mapped to ENV context.</span>
+    </p>
     <li><strong><span class="lang-zh">记忆模式</span><span class="lang-en">Memory Mode</span>:</strong> ${S.memMode === 'all' ? '<span class="lang-zh">监听全网</span><span class="lang-en">Listen to All</span>' : '<span class="lang-zh">特定白名单</span><span class="lang-en">Whitelist</span> (' + S.memUsers.length + '人)'}</li>
     <li><strong><span class="lang-zh">互动概率</span><span class="lang-en">Interaction Pct</span>:</strong> <span class="lang-zh">点赞</span><span class="lang-en">Like</span> ${S.likePct*100}% | <span class="lang-zh">回复</span><span class="lang-en">Reply</span> ${S.replyPct*100}%</li>
   `;

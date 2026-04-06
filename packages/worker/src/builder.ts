@@ -32,9 +32,10 @@ export async function distillSkillFromTweets(
   tweetsByAccount: Record<string, string[]>,
   geminiApiKey: string,
   geminiModel: string,
-  promptLang: string = 'zh'
+  promptLang: string = 'zh',
+  baseUrl?: string
 ): Promise<string> {
-  const ai = new GoogleGenAI({ apiKey: geminiApiKey });
+  const ai = new GoogleGenAI({ apiKey: geminiApiKey, httpOptions: baseUrl ? { baseUrl } : undefined });
   const blocks = Object.entries(tweetsByAccount)
     .map(([u, tweets]) => `### @${u}\n${tweets.map((t, i) => `${i + 1}. ${t}`).join('\n')}`)
     .join('\n\n');
@@ -63,8 +64,8 @@ Generate the persona.skill document now:`;
   return text;
 }
 
-export async function genSample(skill: string, geminiApiKey: string, geminiModel: string) {
-  const ai = new GoogleGenAI({ apiKey: geminiApiKey });
+export async function genSample(skill: string, geminiApiKey: string, geminiModel: string, baseUrl?: string) {
+  const ai = new GoogleGenAI({ apiKey: geminiApiKey, httpOptions: baseUrl ? { baseUrl } : undefined });
   const cfg = (temp: number) => ({ systemInstruction: skill, maxOutputTokens: 200, temperature: temp });
   const [a, b] = await Promise.all([
     ai.models.generateContent({ model: geminiModel, config: cfg(1.1),
@@ -76,9 +77,9 @@ export async function genSample(skill: string, geminiApiKey: string, geminiModel
 }
 
 export async function refineSkill(
-  skill: string, feedback: string, geminiApiKey: string, geminiModel: string,
+  skill: string, feedback: string, geminiApiKey: string, geminiModel: string, baseUrl?: string
 ): Promise<string> {
-  const ai = new GoogleGenAI({ apiKey: geminiApiKey });
+  const ai = new GoogleGenAI({ apiKey: geminiApiKey, httpOptions: baseUrl ? { baseUrl } : undefined });
   const res = await ai.models.generateContent({
     model: geminiModel,
     contents: [{ role: 'user', parts: [{ text:
