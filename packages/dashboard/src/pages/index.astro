@@ -708,7 +708,7 @@ import Layout from "../layouts/Layout.astro";
     $("oauthBtn").addEventListener("click", async () => {
       $("oauthBtn").disabled = true;
       clearErr("err1");
-      const r = await api("/api/oauth/start", {});
+      const r = await api("/api/oauth/start", { currentOrigin: window.location.origin });
       if (r.error) {
         showErr("err1", r.error);
         $("oauthBtn").disabled = false;

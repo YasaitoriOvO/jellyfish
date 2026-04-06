@@ -138,10 +138,12 @@ export default {
       
       const state = crypto.randomUUID().replace(/-/g, '');
 
-      // Local dev with 'routes' overrides request.url and Host. Use Origin/Referer from browser to get true local URL
-      const originHeader = request.headers.get('Origin') || 
-                           (request.headers.get('Referer') ? new URL(request.headers.get('Referer')!).origin : null);
-      const reqOrigin = originHeader || (request.headers.get('x-forwarded-host') ? `${url.protocol}//${request.headers.get('x-forwarded-host')}` : url.origin);
+      let reqBody: any = {};
+      try { reqBody = await request.clone().json(); } catch(e) {}
+
+      // Local dev with 'routes' overrides request.url and headers (Wrangler rewrites Host, Origin, and Referer)
+      // The most reliable way is passing the exact origin via JSON payload from the frontend.
+      const reqOrigin = reqBody.currentOrigin || url.origin;
 
       const authUrl = new URL('https://twitter.com/i/oauth2/authorize');
       authUrl.searchParams.set('response_type', 'code');
