@@ -9,16 +9,9 @@ globs = ["**/*.html"]
 fallbacks = []
 fallthrough = true
 
-# ── Cron Triggers ──────────────────────────────────────────────────────────────
-# These cron expressions MUST match cronSchedules in generated/config.json.
-# The wizard generates both in sync. Edit both together if you change schedules.
 [triggers]
 crons = [
-  "* * * * *",     # mention polling (every 1 min, loops 4 times for ~15s polling)
-  "0 */6 * * *",   # memory consolidation (every 6 hours)
-  "30 12 * * *",   # spontaneous tweet (daily trigger; agent enforces n-day cooldown)
-  "0 * * * *",     # timeline engagement (every 1 hour)
-  "0 3 * * *",     # nightly evolution (3:00 AM)
+  "* * * * *"     # Master poll, index.ts derives intervals from Time.
 ]
 
 # ── KV Namespaces ──────────────────────────────────────────────────────────────
