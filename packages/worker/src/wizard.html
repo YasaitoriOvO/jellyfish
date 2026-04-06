@@ -150,7 +150,7 @@ h3.section{font-size:13px;font-weight:600;color:var(--muted);text-transform:uppe
 
   <div class="oauth-box">
     <h3>方式一：浏览器授权（推荐）</h3>
-    <p style="font-size:13px;color:var(--muted);margin-bottom:12px">确保 X App 的回调 URL 包含：<code style="color:#a78bfa">http://localhost:3000/callback</code></p>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:12px">确保 X App 的回调 URL 包含：<code style="color:#a78bfa" id="cbHint"></code></p>
     <button class="btn btn-primary" id="oauthBtn" onclick="startOAuth()">🔗 打开授权页面</button>
     <div class="oauth-status" id="oauthStatus" style="display:none">
       <div class="dot-pulse"></div><span>等待授权回调中……</span>
@@ -653,6 +653,7 @@ async function saveAndDeploy() {
 }
 
 // ── Init ───────────────────────────────────────────────────────────────────────
+$('cbHint').textContent = window.location.origin + '/callback';
 buildNav();
 </script>
 </body>
