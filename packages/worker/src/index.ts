@@ -436,6 +436,18 @@ export default {
       } catch (err) { return json({ error: String(err) }, 500); }
     }
 
+    // ── Find agent by Twitter handle (public, no auth required) ─────────────
+    if (pathname === '/api/agent/find-by-handle' && method === 'GET') {
+      const handle = (url.searchParams.get('handle') ?? '').replace(/^@/, '').trim().toLowerCase();
+      if (!handle) return json({ error: 'handle required' }, 400);
+      const { results } = await env.DB.prepare(
+        'SELECT id, agent_name, agent_handle FROM agents WHERE LOWER(agent_handle)=? LIMIT 1'
+      ).bind(handle).all();
+      if (!results || results.length === 0) return json({ error: 'not_found' }, 404);
+      const row = results[0] as any;
+      return json({ agentId: row.id, name: row.agent_name, handle: row.agent_handle });
+    }
+
     // ── Admin Dashboard UI ────────────────────────────────────────────────────
     if (pathname === '/dashboard' && method === 'GET') {
       const agentId = url.searchParams.get('id');
@@ -588,7 +600,6 @@ export default {
     </div>
     <h1 id="dash-name"><span style="opacity:.4">...</span> <span class="text-gradient">Dashboard</span></h1>
     <div class="sub" id="dash-sub"><span style="opacity:.4">@... · </span><span class="lang-zh">Agent ID:</span><span class="lang-en">Agent ID:</span> <code style="font-size:.78rem;opacity:.7">${agentId}</code></div>
-    ${vipList.length > 0 ? `<div style="margin-top:8px">${vipList.map((v: any) => `<span class="vip-chip">@${v.username}${v.persona ? ` · ${v.persona}` : ''}</span>`).join('')}</div>` : ''}
   </header>
 
   <div class="section-title"><span class="lang-zh">手动触发操作</span><span class="lang-en">Manual Actions</span></div>
@@ -611,6 +622,9 @@ export default {
     <div class="card">
       <h2>🧠 <span class="lang-zh">互动记忆</span><span class="lang-en">Interaction Memory</span></h2>
       <p><span class="lang-zh">查看白名单用户塑造 Agent 的历史互动记录</span><span class="lang-en">View historical interaction records shaping the Agent</span></p>
+      <p style="font-size:.8rem;color:var(--text-muted);margin-top:4px">
+        🕒 <span class="lang-zh">自动刷取：每 <b>6 小时</b>一次（UTC 00:00 / 06:00 / 12:00 / 18:00，即北京时间 08 / 14 / 20 / 02 时）</span><span class="lang-en">Auto-refreshes every <b>6 hours</b> (UTC 00:00 / 06:00 / 12:00 / 18:00)</span>
+      </p>
       <a class="btn btn-ghost" target="_blank" href="${base}/api/agent/memory?id=${agentId}"><span class="lang-zh">查看记忆</span><span class="lang-en">View Memory</span></a>
       <a class="btn btn-primary" href="#" onclick="run(event,'/api/agent/refresh-memory?id=${agentId}');return false"><span class="lang-zh">拉取最新</span><span class="lang-en">Refresh</span></a>
     </div>

@@ -56,19 +56,22 @@ import Layout from "../layouts/Layout.astro";
         <div
           style="font-size:0.85rem; color:var(--text-muted); margin-bottom:10px;"
         >
-          <span class="lang-zh">已有 Agent？直接进入控制台</span><span
-            class="lang-en">Already have an Agent? Go to Dashboard</span
+          <span class="lang-zh">已有 Agent？用 X 账号登录</span><span
+            class="lang-en">Already have an Agent? Log in with X handle</span
           >
         </div>
         <div class="flex" style="gap:8px; align-items:center;">
-          <input
-            type="text"
-            id="dashboardAgentId"
-            style="flex:1; margin-top:0;"
-            data-ph-zh="粘贴你的 Agent ID"
-            data-ph-en="Paste your Agent ID"
-            placeholder="粘贴你的 Agent ID"
-          />
+          <div style="position:relative; flex:1;">
+            <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.4;pointer-events:none;font-size:1rem;line-height:1">@</span>
+            <input
+              type="text"
+              id="dashboardHandle"
+              style="flex:1; margin-top:0; padding-left:26px;"
+              data-ph-zh="Agent 的 X 账号名"
+              data-ph-en="Agent's X username"
+              placeholder="Agent 的 X 账号名"
+            />
+          </div>
           <button
             class="btn btn-ghost"
             id="gotoDashboardBtn"
@@ -82,8 +85,8 @@ import Layout from "../layouts/Layout.astro";
           id="dashboardErr"
           style="color:var(--error);font-size:0.8rem;margin-top:6px;display:none;"
         >
-          <span class="lang-zh">请输入 Agent ID</span><span class="lang-en"
-            >Please enter an Agent ID</span
+          <span class="lang-zh" id="dashErrZh">未找到该账号对应的 Agent，请先完成部署</span
+          ><span class="lang-en" id="dashErrEn">No Agent found for this handle. Please deploy first.</span
           >
         </div>
       </div>
@@ -750,14 +753,40 @@ import Layout from "../layouts/Layout.astro";
       go(1);
     });
 
-    $("gotoDashboardBtn").addEventListener("click", () => {
-      const id = $("dashboardAgentId").value.trim();
-      if (!id) {
-        $("dashboardErr").style.display = "block";
+    $("gotoDashboardBtn").addEventListener("click", async () => {
+      const handle = ($("dashboardHandle").value || "").trim().replace(/^@/, "");
+      const isEn = document.body.classList.contains("en-mode");
+      const errEl = $("dashboardErr");
+      if (!handle) {
+        $("dashErrZh") && ($("dashErrZh").textContent = "请输入 X 账号名");
+        $("dashErrEn") && ($("dashErrEn").textContent = "Please enter an X username");
+        errEl.style.display = "block";
         return;
       }
-      $("dashboardErr").style.display = "none";
-      window.location.href = "/dashboard?id=" + encodeURIComponent(id);
+      errEl.style.display = "none";
+      const btn = $("gotoDashboardBtn");
+      btn.disabled = true;
+      btn.innerHTML = isEn ? "⏳ Looking up..." : "⏳ 查找中...";
+      try {
+        const res = await api("/api/agent/find-by-handle?handle=" + encodeURIComponent(handle));
+        if (res.agentId) {
+          window.location.href = "/dashboard?id=" + encodeURIComponent(res.agentId);
+        } else {
+          $("dashErrZh") && ($("dashErrZh").textContent = "未找到 @" + handle + " 对应的 Agent，请先完成部署");
+          $("dashErrEn") && ($("dashErrEn").textContent = "No Agent found for @" + handle + ". Please deploy first.");
+          errEl.style.display = "block";
+        }
+      } catch (e) {
+        $("dashErrZh") && ($("dashErrZh").textContent = "查找失败: " + e.message);
+        $("dashErrEn") && ($("dashErrEn").textContent = "Lookup failed: " + e.message);
+        errEl.style.display = "block";
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = isEn ? "🚀 Enter" : "🚀 进入";
+      }
+    });
+    $("dashboardHandle").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") $("gotoDashboardBtn").click();
     });
 
     // Attach generic navigation listeners
