@@ -95,6 +95,37 @@ export default {
 
     // ── Wizard API Endpoints ───────────────────────────────────────────────────
 
+    // Replaced /api/auth-check — dashboard now uses Twitter OAuth to verify ownership
+    if (pathname === '/api/agent/verify-owner' && method === 'POST') {
+      const body = await request.json() as any;
+      const { accessToken, agentId } = body;
+      if (!accessToken || !agentId) return json({ ok: false, error: 'Missing params' }, 400);
+      // Fetch the authed user from Twitter
+      const meRes = await fetch('https://api.twitter.com/2/users/me', {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      const meData = await meRes.json() as any;
+      if (!meRes.ok) return json({ ok: false, error: meData.detail ?? 'Twitter API error' }, 401);
+      const username: string = meData.data?.username ?? '';
+      // Fetch the agent from DB and compare handle
+      const { results } = await env.DB.prepare('SELECT agent_handle FROM agents WHERE id = ?').bind(agentId).all();
+      if (!results || results.length === 0) return json({ ok: false, error: 'Agent not found' }, 404);
+      const agentHandle = (results[0] as any).agent_handle as string;
+      const ok = username.toLowerCase() === agentHandle.toLowerCase();
+      return json({ ok, username, agentHandle });
+    }
+
+    if (pathname === '/api/agent/verify-secret' && method === 'POST') {
+      const body = await request.json() as any;
+      const { agentId, secret } = body;
+      if (!agentId || !secret) return json({ ok: false, error: 'Missing params' }, 400);
+      const { results } = await env.DB.prepare('SELECT agent_secret FROM agents WHERE id = ?').bind(agentId).all();
+      if (!results || results.length === 0) return json({ ok: false, error: 'Agent not found' }, 404);
+      const dbSecret = (results[0] as any).agent_secret as string;
+      const ok = (dbSecret && dbSecret === secret);
+      return json({ ok });
+    }
+
     if (pathname === '/api/oauth/start' && method === 'POST') {
       const sessionId = crypto.randomUUID();
       const codeVerifier = crypto.randomUUID().replace(/-/g, '') + crypto.randomUUID().replace(/-/g, ''); // 64 chars
@@ -260,6 +291,7 @@ export default {
         const skill = reqJson.skill;
         const refreshToken = reqJson.refreshToken;
         const geminiApiKey = env.GEMINI_API_KEY || reqJson.geminiApiKey || '';
+        const dashboardSecret = reqJson.dashboardSecret || '';
 
         const agentId = crypto.randomUUID();
         const ownerId = "public";
@@ -269,14 +301,15 @@ export default {
 
         await env.DB.prepare(`
           INSERT INTO agents (
-            id, owner_id, agent_name, agent_handle, source_accounts, gemini_model, gemini_api_key, 
+            id, owner_id, agent_name, agent_handle, agent_secret, source_accounts, gemini_model, gemini_api_key, 
             refresh_token, access_token, token_expires_at, skill_text, reply_pct, like_pct, 
             cooldown_days, auto_evo, vip_list, mem_whitelist, created_at, status
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, null, 0, ?, ?, ?, ?, ?, ?, ?, ?, 'active')
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, null, 0, ?, ?, ?, ?, ?, ?, ?, ?, 'active')
         `).bind(
           agentId, ownerId,
           config.agentName ?? '',
           config.agentHandle ?? '',
+          dashboardSecret,
           JSON.stringify(config.sourceAccounts ?? []),
           config.geminiModel ?? 'gemini-2.5-pro',
           geminiApiKey,
@@ -311,109 +344,341 @@ export default {
       const base = url.origin;
 
       const html = `<!DOCTYPE html>
-<html lang="zh">
+<html lang="zh-CN">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>${agent.agent_name} · Admin</title>
+  <title>${agent.agent_name} · Dashboard</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
+    :root {
+      --bg: #09090b; --card-bg: rgba(24,24,27,0.6); --card-border: rgba(255,255,255,0.08);
+      --primary: #c1939b; --primary-hover: #ad7982; --primary-glow: rgba(193,147,155,0.3);
+      --text: #fafafa; --text-muted: #a1a1aa; --input-bg: rgba(9,9,11,0.5);
+      --input-border: rgba(255,255,255,0.1); --error: #ef4444; --success: #10b981;
+    }
     *{box-sizing:border-box;margin:0;padding:0}
-    body{font-family:'Inter',system-ui,sans-serif;background:#080810;color:#e2e8f0;min-height:100vh;padding:2rem}
-    h1{font-size:1.6rem;font-weight:700;margin-bottom:.2rem;background:linear-gradient(135deg,#a78bfa,#60a5fa,#34d399);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-    .sub{color:#4a5568;font-size:.85rem;margin-bottom:2rem}
-    .badge{display:inline-block;padding:.15rem .5rem;background:rgba(167,139,250,.15);border:1px solid rgba(167,139,250,.3);border-radius:4px;font-size:.75rem;color:#a78bfa;margin-left:.5rem}
-    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem}
-    .card{background:#0f0f1a;border:1px solid #1e1e2e;border-radius:14px;padding:1.25rem;transition:border-color .2s}
-    .card:hover{border-color:#2d2d45}
-    .card h2{font-size:.875rem;font-weight:600;color:#a78bfa;margin-bottom:.5rem}
-    .card p{font-size:.8rem;color:#6b7280;margin-bottom:1rem;line-height:1.55}
-    .btn{display:inline-block;padding:.45rem 1rem;border-radius:8px;font-size:.8rem;font-weight:600;text-decoration:none;cursor:pointer;transition:all .15s;border:none}
-    .btn-primary{background:linear-gradient(135deg,#7c3aed,#2563eb);color:#fff}
-    .btn-secondary{background:#1e1e2e;color:#94a3b8;border:1px solid #2d2d3d}
-    .btn-purple{background:linear-gradient(135deg,#7c3aed,#9333ea);color:#fff}
-    .btn:hover{opacity:.85;transform:translateY(-1px)}
-    #output{margin-top:1.5rem;background:#0a0a14;border:1px solid #1e1e2e;border-radius:12px;padding:1.25rem;white-space:pre-wrap;font-family:'JetBrains Mono',monospace;font-size:.78rem;color:#86efac;min-height:80px;display:none;line-height:1.6}
+    body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;position:relative;line-height:1.5}
+    .blob{position:fixed;border-radius:50%;filter:blur(80px);z-index:-1;opacity:0.5;animation:float 20s infinite alternate}
+    .blob-1{width:400px;height:400px;background:radial-gradient(circle,var(--primary) 0%,transparent 70%);top:-100px;left:-100px}
+    .blob-2{width:600px;height:600px;background:radial-gradient(circle,#ebb5b2 0%,transparent 70%);bottom:-200px;right:-200px;animation-delay:-5s}
+    @keyframes float{0%{transform:translateY(0) scale(1)}100%{transform:translateY(-50px) scale(1.1)}}
+    .page-wrapper{max-width:960px;margin:0 auto;padding:40px 20px}
+    header{text-align:center;margin-bottom:32px;position:relative}
+    h1{font-size:2rem;font-weight:700;letter-spacing:-.02em}
+    .text-gradient{background:linear-gradient(135deg,#dfa9b1,#ad7982);-webkit-background-clip:text;background-clip:text;color:transparent}
+    .sub{color:var(--text-muted);font-size:.85rem;margin-top:4px}
+    .badge{display:inline-block;padding:.1rem .5rem;background:rgba(193,147,155,.15);border:1px solid rgba(193,147,155,.3);border-radius:6px;font-size:.78rem;color:var(--primary);margin-left:.5rem}
+    .header-actions{position:absolute;right:0;top:0;display:flex;gap:8px;align-items:center}
+    /* Auth gate */
+    #auth-gate{background:var(--card-bg);backdrop-filter:blur(12px);border:1px solid var(--card-border);border-radius:24px;padding:48px 32px;max-width:420px;margin:80px auto;text-align:center}
+    #auth-gate h2{font-size:1.4rem;margin-bottom:8px}
+    #auth-gate p{color:var(--text-muted);font-size:.9rem;margin-bottom:24px}
+    /* Cards */
+    .card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+    .card{background:var(--card-bg);backdrop-filter:blur(12px);border:1px solid var(--card-border);border-radius:16px;padding:20px;transition:border-color .2s}
+    .card:hover{border-color:rgba(255,255,255,0.18)}
+    .card h2{font-size:.9rem;font-weight:600;color:var(--primary);margin-bottom:6px}
+    .card p{font-size:.82rem;color:var(--text-muted);margin-bottom:14px;line-height:1.55}
     .wide{grid-column:1/-1}
-    textarea{width:100%;margin-bottom:.75rem;background:#080810;color:#e2e8f0;border:1px solid #1e1e2e;padding:.6rem;border-radius:8px;font-size:.82rem;resize:vertical;outline:none;transition:border-color .2s}
-    textarea:focus{border-color:#7c3aed}
-    .vip-list{font-size:.75rem;color:#6b7280;margin-top:.5rem}
-    .vip-chip{display:inline-block;padding:.1rem .4rem;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.2);border-radius:4px;color:#fbbf24;margin:.1rem}
+    /* Buttons */
+    .btn{display:inline-flex;align-items:center;justify-content:center;height:40px;padding:0 18px;border-radius:10px;font-weight:600;font-size:.85rem;cursor:pointer;transition:all .2s;border:none;font-family:inherit;white-space:nowrap;text-decoration:none}
+    .btn-primary{background:var(--primary);color:#fff;box-shadow:0 4px 14px 0 var(--primary-glow)}
+    .btn-primary:hover{background:var(--primary-hover);transform:translateY(-1px)}
+    .btn-ghost{background:transparent;color:var(--text-muted);border:1px solid var(--input-border)}
+    .btn-ghost:hover{background:rgba(255,255,255,0.05);color:var(--text)}
+    .btn-danger{background:rgba(239,68,68,0.15);color:#fca5a5;border:1px solid rgba(239,68,68,0.25)}
+    .btn + .btn{margin-left:8px}
+    /* Form elements */
+    input[type=text],input[type=number],input[type=password],textarea{width:100%;background:var(--input-bg);border:1px solid var(--input-border);color:var(--text);padding:10px 14px;border-radius:10px;font-size:.88rem;font-family:inherit;transition:all .2s;margin-top:6px}
+    input[type=text]:focus,input[type=number]:focus,input[type=password]:focus,textarea:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px var(--primary-glow)}
+    textarea{min-height:300px;resize:vertical;font-family:'JetBrains Mono',monospace;font-size:.8rem}
+    label{display:block;font-weight:500;font-size:.85rem;color:#e4e4e7;margin-top:14px}
+    .cfg-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:14px}
+    /* Output */
+    #output{margin-top:20px;background:rgba(0,0,0,0.4);border:1px solid var(--input-border);border-radius:12px;padding:16px;white-space:pre-wrap;font-family:'JetBrains Mono',monospace;font-size:.78rem;color:#86efac;min-height:80px;display:none;line-height:1.6}
+    /* VIP */
+    .vip-chip{display:inline-block;padding:.1rem .45rem;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.2);border-radius:4px;color:#fbbf24;margin:.15rem;font-size:.75rem}
+    /* Status */
+    .status-tag{font-size:.75rem;margin-left:10px;vertical-align:middle}
+    /* Lang */
+    .lang-en{display:none!important}
+    .lang-zh{display:inline}
+    body.en-mode .lang-zh{display:none!important}
+    body.en-mode .lang-en{display:inline!important}
+    .section-title{font-size:.75rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--text-muted);margin:28px 0 12px}
   </style>
 </head>
 <body>
-  <h1>🤖 ${agent.agent_name} · Admin<span class="badge">@${agent.agent_handle}</span></h1>
-  <p class="sub">Tenant ID: ${agent.id} · Powered by Cloudflare D1</p>
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
 
-  <div class="vip-list">
-    VIPs: ${vipList.map((v: any) => `<span class="vip-chip">@${v.username}${v.persona ? ` · ${v.persona}` : ''}</span>`).join('')}
+<!-- Auth Gate -->
+<div id="auth-gate">
+  <h2>🔐 <span class="lang-zh">进入控制台</span><span class="lang-en">Enter Dashboard</span></h2>
+  <div style="margin-top: 16px;">
+    <button class="btn btn-primary" onclick="window.open('/api/oauth/start', 'oauth', 'width=600,height=600')" style="width:100%;height:44px;background:#1da1f2;margin-bottom:12px">
+      <span class="lang-zh">使用 X (Twitter) 登录</span><span class="lang-en">Log in with X (Twitter)</span>
+    </button>
+    <div style="text-align:center;font-size:0.8rem;color:#71717a;margin-bottom:12px">
+      <span class="lang-zh">或使用密码登录</span><span class="lang-en">OR login with password</span>
+    </div>
+    <input type="password" id="secret-input" placeholder="Dashboard Secret" style="margin-bottom:14px">
+    <button class="btn btn-ghost" onclick="doAuthSecret()" style="width:100%;height:44px">
+      <span class="lang-zh">密码验证</span><span class="lang-en">Verify Password</span>
+    </button>
   </div>
-  <br/>
+  <div id="auth-err" style="color:var(--error);font-size:.82rem;margin-top:10px;display:none">
+    <span class="lang-zh">验证失败</span><span class="lang-en">Verification failed</span>
+  </div>
+</div>
 
-  <div class="grid">
+<!-- Dashboard (hidden until authed) -->
+<div id="dashboard" style="display:none">
+<div class="page-wrapper">
+  <header>
+    <div class="header-actions">
+      <button id="langToggle" class="btn btn-ghost" style="height:36px;padding:0 14px;font-size:.82rem">🌐 English</button>
+      <a href="/" class="btn btn-ghost" style="height:36px;padding:0 14px;font-size:.82rem">← <span class="lang-zh">首页</span><span class="lang-en">Home</span></a>
+    </div>
+    <h1>${agent.agent_name} <span class="text-gradient">Dashboard</span></h1>
+    <div class="sub">@${agent.agent_handle} · <span class="lang-zh">Agent ID:</span><span class="lang-en">Agent ID:</span> <code style="font-size:.78rem;opacity:.7">${agentId}</code></div>
+    ${vipList.length > 0 ? `<div style="margin-top:8px">${vipList.map((v: any) => `<span class="vip-chip">@${v.username}${v.persona ? ` · ${v.persona}` : ''}</span>`).join('')}</div>` : ''}
+  </header>
+
+  <div class="section-title"><span class="lang-zh">手动触发操作</span><span class="lang-en">Manual Actions</span></div>
+  <div class="card-grid">
     <div class="card">
-      <h2>📬 回复提及</h2>
-      <p>立即扫描新的 @mention 并生成回复（等同于 1 分钟内的循环）</p>
-      <a class="btn btn-primary" href="#" onclick="run('/api/agent/trigger?id=${agentId}');return false">立即触发</a>
+      <h2>📬 <span class="lang-zh">回复提及</span><span class="lang-en">Reply Mentions</span></h2>
+      <p><span class="lang-zh">立即扫描新的 @mention 并生成回复</span><span class="lang-en">Scan new @mentions and generate replies immediately</span></p>
+      <a class="btn btn-primary" href="#" onclick="run('/api/agent/trigger?id=${agentId}');return false"><span class="lang-zh">立即触发</span><span class="lang-en">Trigger Now</span></a>
     </div>
-
     <div class="card">
-      <h2>👀 刷时间线</h2>
-      <p>扫描关注/粉丝列表，随机点赞或回复 2 条最新推文</p>
-      <a class="btn btn-primary" href="#" onclick="run('/api/agent/trigger-timeline?id=${agentId}');return false">浏览时间线</a>
+      <h2>👀 <span class="lang-zh">刷时间线</span><span class="lang-en">Browse Timeline</span></h2>
+      <p><span class="lang-zh">扫描粉丝/VIP 列表，随机点赞或回复 2 条推文</span><span class="lang-en">Scan fans/VIP list, randomly like or reply to 2 tweets</span></p>
+      <a class="btn btn-primary" href="#" onclick="run('/api/agent/trigger-timeline?id=${agentId}');return false"><span class="lang-zh">浏览时间线</span><span class="lang-en">Browse Timeline</span></a>
     </div>
-
     <div class="card">
-      <h2>💬 自发推文</h2>
-      <p>随机生成并发布一条自发推文（${agent.cooldown_days} 天冷却）</p>
-      <a class="btn btn-primary" href="#" onclick="run('/api/agent/spontaneous?id=${agentId}');return false">发推文</a>
-      &nbsp;
-      <a class="btn btn-secondary" href="#" onclick="run('/api/agent/spontaneous?id=${agentId}&force=true');return false">强制发</a>
+      <h2>💬 <span class="lang-zh">自发推文</span><span class="lang-en">Spontaneous Tweet</span></h2>
+      <p><span class="lang-zh">随机生成并发布一条自发推文（冷却 ${agent.cooldown_days} 天）</span><span class="lang-en">Generate and post a spontaneous tweet (${agent.cooldown_days}d cooldown)</span></p>
+      <a class="btn btn-primary" href="#" onclick="run('/api/agent/spontaneous?id=${agentId}');return false"><span class="lang-zh">发推文</span><span class="lang-en">Post Tweet</span></a>
+      <a class="btn btn-ghost" href="#" onclick="run('/api/agent/spontaneous?id=${agentId}&force=true');return false"><span class="lang-zh">强制发</span><span class="lang-en">Force</span></a>
     </div>
-
     <div class="card">
-      <h2>🧠 互动记忆</h2>
-      <p>查看白名单用户塑造 Agent 的历史互动记录</p>
-      <a class="btn btn-secondary" target="_blank" href="${base}/api/agent/memory?id=${agentId}">查看记忆</a>
-      &nbsp;
-      <a class="btn btn-primary" href="#" onclick="run('/api/agent/refresh-memory?id=${agentId}');return false">拉取最新</a>
+      <h2>🧠 <span class="lang-zh">互动记忆</span><span class="lang-en">Interaction Memory</span></h2>
+      <p><span class="lang-zh">查看白名单用户塑造 Agent 的历史互动记录</span><span class="lang-en">View historical interaction records shaping the Agent</span></p>
+      <a class="btn btn-ghost" target="_blank" href="${base}/api/agent/memory?id=${agentId}"><span class="lang-zh">查看记忆</span><span class="lang-en">View Memory</span></a>
+      <a class="btn btn-primary" href="#" onclick="run('/api/agent/refresh-memory?id=${agentId}');return false"><span class="lang-zh">拉取最新</span><span class="lang-en">Refresh</span></a>
     </div>
-
-    <div class="card" style="border-color:#7c3aed">
-      <h2 style="color:#c084fc">🧬 人格演化</h2>
-      <p>手动触发：吸收现有记忆彻底充实底仓性格（执行后清空现有记忆库）</p>
-      <a class="btn btn-purple" href="#" onclick="run('/api/agent/evolve?id=${agentId}');return false">强制重塑底层人格</a>
+    <div class="card" style="border-color:rgba(139,92,246,0.4)">
+      <h2 style="color:#c084fc">🧬 <span class="lang-zh">人格演化</span><span class="lang-en">Persona Evolution</span></h2>
+      <p><span class="lang-zh">吸收现有记忆重塑底层人格（执行后清空记忆库）</span><span class="lang-en">Absorb memories to reshape persona (clears memory after)</span></p>
+      <a class="btn btn-primary" href="#" onclick="run('/api/agent/evolve?id=${agentId}');return false"><span class="lang-zh">强制重塑</span><span class="lang-en">Evolve Now</span></a>
     </div>
-
     <div class="card">
-      <h2>📊 Agent 状态</h2>
-      <p>查看当前状态（last mention ID、config 信息等）</p>
-      <a class="btn btn-secondary" href="#" onclick="run('/api/agent/status?id=${agentId}');return false">查看</a>
-    </div>
-
-    <div class="card" style="border-color:#3b82f6">
-      <h2 style="color:#60a5fa">📡 神经脉冲活动</h2>
-      <p>雷达监控：查看 Agent 近期所有隐秘动作（阅读、点赞、回复、推文）</p>
-      <a class="btn btn-secondary" target="_blank" href="${base}/api/agent/activity?id=${agentId}">拉取监控日志</a>
+      <h2>📊 <span class="lang-zh">Agent 状态</span><span class="lang-en">Agent Status</span></h2>
+      <p><span class="lang-zh">查看当前状态与配置信息</span><span class="lang-en">View current status and configuration</span></p>
+      <a class="btn btn-ghost" href="#" onclick="run('/api/agent/status?id=${agentId}');return false"><span class="lang-zh">查看</span><span class="lang-en">View</span></a>
+      <a class="btn btn-ghost" target="_blank" href="${base}/api/agent/activity?id=${agentId}"><span class="lang-zh">活动日志</span><span class="lang-en">Activity Log</span></a>
     </div>
   </div>
 
-  <pre id="output"></pre>
+  <div class="section-title"><span class="lang-zh">配置调节</span><span class="lang-en">Configuration</span></div>
+  <div class="card-grid">
+    <div class="card wide" style="border-color:rgba(37,99,235,0.4)">
+      <h2 style="color:#60a5fa">⚙️ <span class="lang-zh">概率调节</span><span class="lang-en">Probability Settings</span></h2>
+      <p><span class="lang-zh">调整回复概率、点赞概率与自发推文冷却时间</span><span class="lang-en">Adjust reply/like probability and spontaneous tweet cooldown</span></p>
+      <div class="cfg-grid">
+        <label><span class="lang-zh">回复概率 (0~1)</span><span class="lang-en">Reply Probability (0~1)</span>
+          <input id="cfg-reply" type="number" step="0.05" min="0" max="1" value="${agent.reply_pct}">
+        </label>
+        <label><span class="lang-zh">点赞概率 (0~1)</span><span class="lang-en">Like Probability (0~1)</span>
+          <input id="cfg-like" type="number" step="0.05" min="0" max="1" value="${agent.like_pct}">
+        </label>
+        <label><span class="lang-zh">自发推文冷却（天）</span><span class="lang-en">Cooldown (Days)</span>
+          <input id="cfg-cooldown" type="number" step="1" min="0" value="${agent.cooldown_days}">
+        </label>
+      </div>
+      <button class="btn btn-primary" onclick="saveConfig('${agentId}')">💾 <span class="lang-zh">保存配置</span><span class="lang-en">Save Config</span></button>
+      <span id="cfg-status" class="status-tag"></span>
+    </div>
 
-  <script>
-    async function run(path) {
-      const out = document.getElementById('output');
-      out.style.display = 'block';
-      out.textContent = '⏳ 请求中...';
-      try {
-        const res = await fetch(path);
-        const text = await res.text();
-        try { out.textContent = JSON.stringify(JSON.parse(text), null, 2); }
-        catch { out.textContent = text; }
-      } catch(e) { out.textContent = '❌ ' + e.message; }
+    <div class="card wide" style="border-color:rgba(139,92,246,0.4)">
+      <h2 style="color:#c084fc">✍️ <span class="lang-zh">微调人格 (System Prompt)</span><span class="lang-en">Fine-tune Persona (System Prompt)</span></h2>
+      <p><span class="lang-zh">直接编辑人格配置文本，保存后下一次触发即生效</span><span class="lang-en">Edit persona text directly; takes effect on next trigger</span></p>
+      <textarea id="skill-text">${(agent.skill_text ?? '').replace(/</g, '&lt;').replace(/>/g, '&gt;')}</textarea>
+      <button class="btn btn-primary" onclick="saveSkill('${agentId}')">💾 <span class="lang-zh">保存人格</span><span class="lang-en">Save Persona</span></button>
+      <span id="skill-status" class="status-tag"></span>
+    </div>
+
+    <div class="card wide" style="border-color:rgba(239,68,68,0.4)">
+      <h2 style="color:#f87171">🔑 <span class="lang-zh">控制台密码</span><span class="lang-en">Dashboard Secret</span></h2>
+      <p><span class="lang-zh">设置或更新控制台访问密码</span><span class="lang-en">Set or update dashboard access password</span></p>
+      <div style="display:flex;gap:12px;margin-bottom:14px">
+        <input id="dash-secret-update" type="password" placeholder="New Secret" style="max-width:300px;margin-top:0">
+        <button class="btn btn-danger" onclick="updateDashSecret('${agentId}')">💾 <span class="lang-zh">保存密码</span><span class="lang-en">Save Password</span></button>
+      </div>
+      <span id="secret-status" class="status-tag"></span>
+    </div>
+  </div>
+
+  <div id="output"></div>
+</div>
+</div>
+
+<script>
+  // ── Auth ──────────────────────────────────────────────────────────────────
+  (function() {
+    var saved = sessionStorage.getItem('dashSecret');
+    if (saved) { doAuthSecret(saved); }
+  })();
+
+  // OAuth Listener
+  window.addEventListener('message', async (e) => {
+    if (e.data && e.data.type === 'oauth_success') {
+      verifyOAuth(e.data.accessToken);
     }
-  </script>
+  });
+
+  async function verifyOAuth(accessToken) {
+    document.getElementById('auth-err').style.display = 'none';
+    var r = await fetch('/api/agent/verify-owner', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ agentId: '${agentId}', accessToken })
+    });
+    var d = await r.json();
+    if (d.ok) {
+      document.getElementById('auth-gate').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+    } else {
+      var err = document.getElementById('auth-err');
+      err.style.display = 'block';
+      err.textContent = 'Auth failed: ' + (d.error || 'Handle mismatch');
+    }
+  }
+
+  function doAuthSecret(prefillSecret) {
+    document.getElementById('auth-err').style.display = 'none';
+    var s = prefillSecret || document.getElementById('secret-input').value.trim();
+    if (!s) return;
+    verifySecretCall(s, !prefillSecret);
+  }
+
+  async function verifySecretCall(secret, fromInput) {
+    var r = await fetch('/api/agent/verify-secret', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ agentId: '${agentId}', secret })
+    });
+    var d = await r.json();
+    if (d.ok) {
+      sessionStorage.setItem('dashSecret', secret);
+      document.getElementById('auth-gate').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+    } else if (fromInput) {
+      var err = document.getElementById('auth-err');
+      err.style.display = 'block';
+      err.textContent = document.body.classList.contains('en-mode') ? 'Incorrect password' : '密码错误';
+    }
+  }
+
+  document.getElementById('secret-input')?.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') doAuthSecret();
+  });
+
+  // ── Language toggle ───────────────────────────────────────────────────────
+  (function() {
+    var btn = document.getElementById('langToggle');
+    var setLang = function(lang) {
+      if (lang === 'en') {
+        document.body.classList.add('en-mode');
+        btn.textContent = '🌐 中文';
+        localStorage.setItem('agentSettingsLang', 'en');
+      } else {
+        document.body.classList.remove('en-mode');
+        btn.textContent = '🌐 English';
+        localStorage.setItem('agentSettingsLang', 'zh');
+      }
+    };
+    var saved = localStorage.getItem('agentSettingsLang');
+    if (saved === 'en') setLang('en');
+    btn.addEventListener('click', function() {
+      setLang(document.body.classList.contains('en-mode') ? 'zh' : 'en');
+    });
+  })();
+
+  // ── Actions ───────────────────────────────────────────────────────────────
+  async function run(path) {
+    var out = document.getElementById('output');
+    out.style.display = 'block';
+    out.textContent = '⏳ ' + (document.body.classList.contains('en-mode') ? 'Requesting...' : '请求中...');
+    try {
+      var res = await fetch(path);
+      var text = await res.text();
+      try { out.textContent = JSON.stringify(JSON.parse(text), null, 2); }
+      catch { out.textContent = text; }
+    } catch(e) { out.textContent = '❌ ' + e.message; }
+  }
+
+  async function saveConfig(id) {
+    var reply = parseFloat(document.getElementById('cfg-reply').value);
+    var like  = parseFloat(document.getElementById('cfg-like').value);
+    var cool  = parseFloat(document.getElementById('cfg-cooldown').value);
+    var st = document.getElementById('cfg-status');
+    var isEn = document.body.classList.contains('en-mode');
+    st.textContent = isEn ? '⏳ Saving...' : '⏳ 保存中...'; st.style.color = '#94a3b8';
+    try {
+      var r = await fetch('/api/agent/update-config?id=' + id, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({reply_pct:reply, like_pct:like, cooldown_days:cool})
+      });
+      var d = await r.json();
+      st.textContent = d.ok ? (isEn ? '✅ Saved' : '✅ 已保存') : '❌ ' + d.error;
+      st.style.color = d.ok ? '#86efac' : '#f87171';
+    } catch(e) { st.textContent = '❌ ' + e.message; st.style.color = '#f87171'; }
+  }
+
+  async function saveSkill(id) {
+    var skill = document.getElementById('skill-text').value.trim();
+    var st = document.getElementById('skill-status');
+    var isEn = document.body.classList.contains('en-mode');
+    if (!skill) { st.textContent = isEn ? '⚠️ Cannot be empty' : '⚠️ 不能为空'; st.style.color = '#fbbf24'; return; }
+    st.textContent = isEn ? '⏳ Saving...' : '⏳ 保存中...'; st.style.color = '#94a3b8';
+    try {
+      var r = await fetch('/api/agent/update-skill?id=' + id, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({skill})
+      });
+      var d = await r.json();
+      st.textContent = d.ok ? (isEn ? '✅ Saved' : '✅ 已保存') : '❌ ' + d.error;
+      st.style.color = d.ok ? '#86efac' : '#f87171';
+    } catch(e) { st.textContent = '❌ ' + e.message; st.style.color = '#f87171'; }
+  }
+
+  async function updateDashSecret(id) {
+    var secret = document.getElementById('dash-secret-update').value.trim();
+    var st = document.getElementById('secret-status');
+    var isEn = document.body.classList.contains('en-mode');
+    if (!secret) { st.textContent = isEn ? '⚠️ Cannot be empty' : '⚠️ 不能为空'; st.style.color = '#fbbf24'; return; }
+    st.textContent = isEn ? '⏳ Saving...' : '⏳ 保存中...'; st.style.color = '#94a3b8';
+    try {
+      var r = await fetch('/api/agent/update-secret?id=' + id, {
+        method:'POST', headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({secret})
+      });
+      var d = await r.json();
+      st.textContent = d.ok ? (isEn ? '✅ Saved' : '✅ 已保存') : '❌ ' + d.error;
+      st.style.color = d.ok ? '#86efac' : '#f87171';
+      if (d.ok) {
+        sessionStorage.setItem('dashSecret', secret);
+        document.getElementById('dash-secret-update').value = '';
+      }
+    } catch(e) { st.textContent = '❌ ' + e.message; st.style.color = '#f87171'; }
+  }
+</script>
 </body>
 </html>`;
       return new Response(html, { headers: { 'Content-Type': 'text/html; charset=utf-8' } });
@@ -459,6 +724,36 @@ export default {
       if (pathname === '/api/agent/spontaneous') {
         const force = url.searchParams.get('force') === 'true';
         try { return json({ ok: true, ...(await runSpontaneousTweet(env, agent, force)) }); } catch (err) { return json({ ok: false, error: String(err) }, 500); }
+      }
+      if (pathname === '/api/agent/update-config' && method === 'POST') {
+        try {
+          const body = await request.json() as any;
+          const replyPct = parseFloat(body.reply_pct);
+          const likePct  = parseFloat(body.like_pct);
+          const cooldown = parseFloat(body.cooldown_days);
+          if ([replyPct, likePct, cooldown].some(v => isNaN(v))) return json({ error: 'Invalid values' }, 400);
+          await env.DB.prepare('UPDATE agents SET reply_pct=?, like_pct=?, cooldown_days=? WHERE id=?')
+            .bind(replyPct, likePct, cooldown, agentId).run();
+          return json({ ok: true });
+        } catch (err) { return json({ ok: false, error: String(err) }, 500); }
+      }
+      if (pathname === '/api/agent/update-skill' && method === 'POST') {
+        try {
+          const body = await request.json() as any;
+          const skill = (body.skill ?? '').trim();
+          if (!skill) return json({ error: 'Skill text is empty' }, 400);
+          await env.DB.prepare('UPDATE agents SET skill_text=? WHERE id=?').bind(skill, agentId).run();
+          return json({ ok: true });
+        } catch (err) { return json({ ok: false, error: String(err) }, 500); }
+      }
+      if (pathname === '/api/agent/update-secret' && method === 'POST') {
+        try {
+          const body = await request.json() as any;
+          const secret = (body.secret ?? '').trim();
+          if (!secret) return json({ error: 'Secret is empty' }, 400);
+          await env.DB.prepare('UPDATE agents SET agent_secret=? WHERE id=?').bind(secret, agentId).run();
+          return json({ ok: true });
+        } catch (err) { return json({ ok: false, error: String(err) }, 500); }
       }
       return json({ error: 'Unknown agent action' }, 404);
     }

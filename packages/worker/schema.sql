@@ -5,6 +5,7 @@ CREATE TABLE agents (
   owner_id TEXT,
   agent_name TEXT,
   agent_handle TEXT,
+  agent_secret TEXT,
   source_accounts TEXT, -- JSON array
   gemini_model TEXT,
   gemini_api_key TEXT,
