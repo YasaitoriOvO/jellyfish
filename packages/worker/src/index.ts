@@ -71,6 +71,12 @@ export default {
     const method = request.method;
     const pathname = url.pathname.replace(/\/$/, '') || '/';
 
+    // Fallback Ping Endpoint (if Cloudflare account hit max 5 crons limit)
+    if (pathname === '/api/cron') {
+      ctx.waitUntil(this.scheduled({ cron: '* * * * *', type: 'cron', scheduledTime: Date.now() }, env, ctx));
+      return new Response('Cron executed via HTTP trigger', { status: 200 });
+    }
+
     // CORS preflight
     if (request.method === "OPTIONS") {
       return new Response(null, {
