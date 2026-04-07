@@ -76,6 +76,9 @@ export interface Env {
   LOCAL_ORIGIN?: string;
   /** Ko-Fi Webhook verification token (set via wrangler secret put KO_FI_VERIFICATION_TOKEN) */
   KO_FI_VERIFICATION_TOKEN?: string;
+  /** Separate Twitter App for dashboard identity verification (avoids rotating agent's refresh grant) */
+  X_AUTH_CLIENT_ID?: string;
+  X_AUTH_CLIENT_SECRET?: string;
   /** Minimum donation amount to generate a license key, e.g. "9" (set in wrangler.toml vars) */
   KO_FI_MINIMUM_AMOUNT?: string;
   /** Secret for protecting the HTTP /api/cron trigger (set via wrangler secret put CRON_SECRET) */

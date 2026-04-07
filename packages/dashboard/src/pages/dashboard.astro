@@ -103,6 +103,15 @@
     <p class="sub" id="dash-sub"><span class="skeleton" style="width:160px">&nbsp;</span></p>
   </header>
 
+  <!-- Token health warning banner (shown if refresh token has expired) -->
+  <div id="token-warning" style="display:none;margin-bottom:20px;padding:16px 20px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.4);border-radius:16px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <div>
+      <strong style="color:#f87171">⚠️ <span class="lang-zh">Twitter 授权已失效</span><span class="lang-en">Twitter Authorization Expired</span></strong>
+      <p style="margin:4px 0 0;color:#a1a1aa;font-size:.85rem"><span class="lang-zh">Agent 的 Refresh Token 已无效，无法正常执行任务。请立即重新授权。</span><span class="lang-en">Agent's Refresh Token is invalid. Tasks will fail until you re-authorize.</span></p>
+    </div>
+    <button class="btn btn-danger" onclick="doReauth()" style="flex-shrink:0">🔗 <span class="lang-zh">立即重新授权</span><span class="lang-en">Re-authorize Now</span></button>
+  </div>
+
   <!-- Manual Actions -->
   <div class="section-title"><span class="lang-zh">手动触发操作</span><span class="lang-en">Manual Actions</span></div>
   <div class="card-grid">
@@ -403,6 +412,23 @@
     document.getElementById('auth-gate').style.display = 'none';
     document.getElementById('dashboard').style.display = 'block';
     loadAgentData();
+    checkTokenHealth();
+  }
+
+  async function checkTokenHealth() {
+    try {
+      var r = await fetch(getApiUrl('/api/agent/token-health'));
+      var d = await r.json();
+      var banner = document.getElementById('token-warning');
+      if (!d.healthy) {
+        banner.style.display = 'flex';
+        // Also highlight the reauth card
+        var reauthCard = document.getElementById('reauthBtn');
+        if (reauthCard) reauthCard.style.animation = 'pulse 2s infinite';
+      } else {
+        banner.style.display = 'none';
+      }
+    } catch(e) { /* silent — don't block dashboard */ }
   }
 
   // ── Load agent data ───────────────────────────────────────────────────────

@@ -93,17 +93,18 @@ app.post('/api/oauth/start', async (c) => {
   const reqOrigin = c.env.LOCAL_ORIGIN || reqBody.currentOrigin || new URL(c.req.url).origin;
 
   const redirectUri = reqOrigin + '/callback';
+  // Use the dedicated Auth App for dashboard login to avoid rotating the agent's refresh grant
+  const authClientId = c.env.X_AUTH_CLIENT_ID || c.env.X_CLIENT_ID;
   const authUrl = new URL('https://twitter.com/i/oauth2/authorize');
   authUrl.searchParams.set('response_type', 'code');
-  authUrl.searchParams.set('client_id', c.env.X_CLIENT_ID);
+  authUrl.searchParams.set('client_id', authClientId);
   authUrl.searchParams.set('redirect_uri', redirectUri);
-  // Dashboard login: users.read only — avoids creating a new refresh grant that would invalidate the agent's stored refresh_token
-  authUrl.searchParams.set('scope', 'tweet.read users.read'); // no offline.access — avoids rotating agent's refresh grant
+  authUrl.searchParams.set('scope', 'tweet.read users.read'); // no offline.access — identity verify only
   authUrl.searchParams.set('state', state);
   authUrl.searchParams.set('code_challenge', codeChallenge);
   authUrl.searchParams.set('code_challenge_method', 'S256');
 
-  const sessionData = { state, codeVerifier, redirectUri, status: 'pending' };
+  const sessionData = { state, codeVerifier, redirectUri, status: 'pending', clientId: authClientId };
   await c.env.AGENT_STATE.put('oauth:' + sessionId, JSON.stringify(sessionData), { expirationTtl: 600 });
   await c.env.AGENT_STATE.put('oauth_state:' + state, sessionId, { expirationTtl: 600 });
 
@@ -141,14 +142,19 @@ app.get('/callback', async (c) => {
     return html(renderAuthUI('授权被拒', 'Auth Denied', '你已拒绝授权，请关闭此页。', 'Authorization denied.', true));
   }
 
-  const creds = btoa(`${c.env.X_CLIENT_ID}:${c.env.X_CLIENT_SECRET}`);
+  // Use the client_id that was used to start the session (auth app vs agent app)
+  const sessionClientId = session.clientId || c.env.X_CLIENT_ID;
+  const sessionClientSecret = (session.clientId === c.env.X_AUTH_CLIENT_ID && c.env.X_AUTH_CLIENT_SECRET)
+    ? c.env.X_AUTH_CLIENT_SECRET
+    : c.env.X_CLIENT_SECRET;
+  const creds = btoa(`${sessionClientId}:${sessionClientSecret}`);
   const tokenRes = await fetch('https://api.twitter.com/2/oauth2/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded', Authorization: `Basic ${creds}` },
     body: new URLSearchParams({
       code: code || '', grant_type: 'authorization_code',
       redirect_uri: session.redirectUri || url.origin + '/callback',
-      code_verifier: session.codeVerifier, client_id: c.env.X_CLIENT_ID,
+      code_verifier: session.codeVerifier, client_id: sessionClientId,
     }).toString(),
   });
   const data = await tokenRes.json() as any;
@@ -516,6 +522,21 @@ app.get('/api/agent/detail', async (c) => {
     pro_expires_at: ((agent as any).pro_expires_at ?? 0) * 86400000, // convert days → ms for frontend
     status: agent.status,
   });
+});
+
+// ── Token health check (dashboard calls on load to detect expired refresh tokens) ──
+app.get('/api/agent/token-health', async (c) => {
+  const agentId = c.req.query('id');
+  if (!agentId) return c.json({ healthy: false, error: 'Missing agent ID' }, 400);
+  const agent = await loadAgent(c);
+  if (!agent) return c.json({ healthy: false, error: 'Agent not found' }, 404);
+  if (!agent.refresh_token) return c.json({ healthy: false, error: 'no_refresh_token' });
+  try {
+    await getValidAccessToken(c.env, agent);
+    return c.json({ healthy: true });
+  } catch (err) {
+    return c.json({ healthy: false, error: String(err) });
+  }
 });
 
 // ── KV-only reads ──────────────────────────────────────────────────────────
