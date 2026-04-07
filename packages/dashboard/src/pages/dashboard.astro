@@ -57,7 +57,10 @@
     .status-tag{display:inline-block;font-size:.78rem;padding:.15rem .5rem;border-radius:6px;margin-left:10px;transition:all .3s}
     .lang-en{display:none!important}.lang-zh{display:inline}
     body.en-mode .lang-zh{display:none!important}body.en-mode .lang-en{display:inline!important}
-    .vip-chip{display:inline-block;padding:.1rem .45rem;background:rgba(251,191,36,.1);border:1px solid rgba(251,191,36,.2);border-radius:4px;color:#fbbf24;margin:.15rem;font-size:.75rem}
+    .vip-chip{display:inline-flex;align-items:center;gap:5px;padding:.2rem .6rem .2rem .7rem;background:rgba(20,184,166,0.1);border:1px solid rgba(20,184,166,0.25);border-radius:999px;color:#5eead4;margin:.2rem .15rem;font-size:.78rem;font-family:monospace;letter-spacing:.01em;transition:border-color .15s,background .15s}
+    .vip-chip:hover{background:rgba(20,184,166,0.15);border-color:rgba(20,184,166,0.4)}
+    .vip-chip .chip-del{background:none;border:none;color:rgba(248,113,113,0.4);cursor:pointer;font-size:.9rem;line-height:1;padding:0;transition:color .15s}
+    .vip-chip .chip-del:hover{color:#f87171}
     .btn-loading{position:relative;pointer-events:none;opacity:.75}
     .btn-loading::after{content:'';position:absolute;right:10px;top:50%;width:14px;height:14px;margin-top:-7px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
     @keyframes spin{to{transform:rotate(360deg)}}
@@ -269,7 +272,7 @@
         <label style="margin-top:8px"><input type="radio" name="wl-mode" value="list"> <span class="lang-zh">指定白名单</span><span class="lang-en">Specific list</span></label>
       </div>
       <div id="wl-list-area" style="display:none">
-        <div id="wl-chips" style="margin:8px 0;min-height:28px"></div>
+        <div id="wl-chips" style="display:flex;flex-wrap:wrap;gap:0;margin:10px 0;min-height:28px;align-items:center"></div>
         <div style="display:flex;gap:8px">
           <input id="wl-new-handle" type="text" placeholder="@handle" style="margin:0">
           <button class="btn btn-ghost" onclick="addWlHandle()">✚</button>
@@ -610,7 +613,7 @@
         + '<td style="padding:6px 4px">' + (v.replyProbability ?? '-') + '</td>'
         + '<td style="padding:6px 4px">' + (v.likeProbability ?? '-') + '</td>'
         + '<td style="padding:6px 4px;color:var(--text-muted)">' + (v.persona || '') + '</td>'
-        + '<td style="padding:6px 4px"><button data-idx="' + i + '" class="vip-del-btn btn btn-ghost" style="height:28px;padding:0 10px;font-size:.75rem;border-color:rgba(239,68,68,0.3);color:#f87171">✕</button></td>';
+        + '<td style="padding:6px 4px"><button data-idx="' + i + '" class="vip-del-btn" style="background:none;border:none;cursor:pointer;color:rgba(248,113,113,0.45);font-size:1rem;line-height:1;padding:4px 8px;border-radius:8px;transition:color .15s,background .15s" onmouseover="this.style.color=\'#f87171\';this.style.background=\'rgba(239,68,68,0.1)\'" onmouseout="this.style.color=\'rgba(248,113,113,0.45)\';this.style.background=\'none\'">✕</button></td>';
       tbody.appendChild(tr);
     });
     tbody.querySelectorAll('.vip-del-btn').forEach(function(btn) {
@@ -664,7 +667,7 @@
   function renderWlChips() {
     var el = document.getElementById('wl-chips');
     el.innerHTML = _wlHandles.map(function(h, i) {
-      return '<span class="vip-chip">@' + h + ' <button onclick="removeWlHandle(' + i + ')" style="background:none;border:none;color:#f87171;cursor:pointer;font-size:.75rem;padding:0 0 0 4px">✕</button></span>';
+      return '<span class="vip-chip">@' + h + '<button class="chip-del" onclick="removeWlHandle(' + i + ')" title="Remove">✕</button></span>';
     }).join('');
   }
 
