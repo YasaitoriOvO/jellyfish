@@ -104,7 +104,7 @@
   </header>
 
   <!-- Token health warning banner (shown if refresh token has expired) -->
-  <div id="token-warning" style="display:none;margin-bottom:20px;padding:16px 20px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.4);border-radius:16px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
+  <div id="token-warning" style="display:none;margin-bottom:20px;padding:16px 20px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.4);border-radius:16px;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap">
     <div>
       <strong style="color:#f87171">⚠️ <span class="lang-zh">Twitter 授权已失效</span><span class="lang-en">Twitter Authorization Expired</span></strong>
       <p style="margin:4px 0 0;color:#a1a1aa;font-size:.85rem"><span class="lang-zh">Agent 的 Refresh Token 已无效，无法正常执行任务。请立即重新授权。</span><span class="lang-en">Agent's Refresh Token is invalid. Tasks will fail until you re-authorize.</span></p>
@@ -454,7 +454,7 @@
       var proSt = document.getElementById('pro-key-status');
       if (proExp > Date.now()) {
         sessionStorage.setItem('pro_expires_at', String(proExp));
-        proSt.innerHTML = '<span style="color:#86efac">✅ Pro 已激活，有效至 <b>' + new Date(proExp).toLocaleDateString('zh-CN') + '</b></span>';
+        proSt.innerHTML = '<span style="color:#86efac">✅ Pro 已激活，有效至 <b>' + (function(ts) { var d = new Date(ts); return (!ts || ts <= 0 || isNaN(d.getTime()) || ts > 3e12) ? '<span class="lang-zh">永远</span><span class="lang-en">Forever</span>' : d.toLocaleDateString('zh-CN'); })(proExp) + '</b></span>';
       } else {
         sessionStorage.removeItem('pro_expires_at');
         proSt.innerHTML = '<span style="color:var(--text-muted)">🔒 <span class="lang-zh">未激活 · <a href="https://ko-fi.com/HomeCollider" target="_blank" style="color:#a78bfa">Ko-Fi 购买授权</a></span><span class="lang-en">Not activated · <a href="https://ko-fi.com/HomeCollider" target="_blank" style="color:#a78bfa">Buy on Ko-Fi</a></span></span>';
@@ -550,7 +550,7 @@
       var d = await r.json();
       if (d.ok) {
         sessionStorage.setItem('pro_expires_at', String(d.expires_at));
-        st.innerHTML = '<span style="color:#86efac">✅ Pro 已激活，有效至 <b>' + new Date(d.expires_at).toLocaleDateString('zh-CN') + '</b></span>';
+        st.innerHTML = '<span style="color:#86efac">✅ Pro 已激活，有效至 <b>' + (function(ts) { var d = new Date(ts); return (!ts || ts <= 0 || isNaN(d.getTime()) || ts > 3e12) ? '<span class="lang-zh">永远</span><span class="lang-en">Forever</span>' : d.toLocaleDateString('zh-CN'); })(d.expires_at) + '</b></span>';
       } else {
         st.textContent = '❌ ' + d.error; st.style.color = '#f87171';
       }
