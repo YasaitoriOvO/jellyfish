@@ -98,7 +98,7 @@ app.post('/api/oauth/start', async (c) => {
   authUrl.searchParams.set('client_id', c.env.X_CLIENT_ID);
   authUrl.searchParams.set('redirect_uri', redirectUri);
   // Dashboard login: users.read only — avoids creating a new refresh grant that would invalidate the agent's stored refresh_token
-  authUrl.searchParams.set('scope', 'users.read');
+  authUrl.searchParams.set('scope', 'tweet.read users.read'); // no offline.access — avoids rotating agent's refresh grant
   authUrl.searchParams.set('state', state);
   authUrl.searchParams.set('code_challenge', codeChallenge);
   authUrl.searchParams.set('code_challenge_method', 'S256');
