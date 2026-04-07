@@ -174,25 +174,48 @@ app.get('/callback', async (c) => {
     console.log(`[oauth] Reauth tokens updated in DB for agent ${session.agentId}`);
   }
 
+  // Store accessToken in session so mobile polling can retrieve it
+  session.accessToken = data.access_token;
+  session.status = 'done';
   await c.env.AGENT_STATE.put('oauth:' + sessionId, JSON.stringify(session), { expirationTtl: 600 });
 
-  // Reauth flow: just show success
+  // Reauth flow: show success + redirect back to dashboard if no opener (mobile)
+  const reauthReturnUrl = session.redirectUri ? session.redirectUri.replace('/callback', '/dashboard') + '?id=' + (session.agentId || '') + '&_oauthDone=reauth' : '';
   if (session.agentId) {
-    return html(renderAuthUI('授权已更新', 'Auth Updated', '新的 Refresh Token 现已生效，请关闭此页。', 'New Refresh Token is now active. You can close this page.'));
+    const reauthReturnUrlJson = JSON.stringify(reauthReturnUrl);
+    const reauthHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Auth</title><style>body{font-family:'Inter',system-ui,-apple-system;background:#09090b;color:#fafafa;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}.c{background:rgba(24,24,27,0.6);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.08);border-radius:24px;padding:48px 32px;text-align:center;max-width:360px}h2{color:#86efac;margin-top:0}p{color:#a1a1aa}</style></head><body><div class="c"><h2>✅ 授权已更新 / Re-auth Successful</h2><p>正在返回控制台… / Returning to dashboard…</p></div><script>
+try {
+  if (window.opener && !window.opener.closed) {
+    window.opener.postMessage({ type: 'reauth-complete' }, '*');
+    setTimeout(function() { window.close(); }, 1000);
+  } else {
+    var ru = ${reauthReturnUrlJson};
+    if (ru) setTimeout(function() { window.location.href = ru; }, 800);
+    else setTimeout(function() { window.close(); }, 1500);
+  }
+} catch(e) { setTimeout(function() { window.close(); }, 1500); }
+<\/script></body></html>`;
+    return html(reauthHtml);
   }
 
   // Dashboard login: postMessage the accessToken back to opener window, then close
   // Use the stored redirectUri origin as targetOrigin to prevent token interception (#12)
   const targetOrigin = session.redirectUri ? new URL(session.redirectUri).origin : '*';
+  const loginReturnUrl = session.redirectUri ? session.redirectUri.replace('/callback', '/dashboard') + '?id=' + '&_oauthDone=login' : '';
   const accessTokenJson = JSON.stringify(data.access_token);
   const targetOriginJson = JSON.stringify(targetOrigin);
+  const loginReturnUrlJson = JSON.stringify(loginReturnUrl);
   const dashSuccessHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Auth</title><style>body{font-family:'Inter',system-ui,-apple-system;background:#09090b;color:#fafafa;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}.c{background:rgba(24,24,27,0.6);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.08);border-radius:24px;padding:48px 32px;text-align:center;max-width:360px}h2{color:#86efac;margin-top:0}p{color:#a1a1aa}</style></head><body><div class="c"><h2>✅ 授权成功 / Auth Successful</h2><p>正在返回控制台… / Redirecting to dashboard…</p></div><script>
 try {
   if (window.opener && !window.opener.closed) {
     window.opener.postMessage({ type: 'oauth_success', accessToken: ${accessTokenJson} }, ${targetOriginJson});
+    setTimeout(function() { window.close(); }, 1500);
+  } else {
+    var ru = ${loginReturnUrlJson};
+    if (ru) setTimeout(function() { window.location.href = ru; }, 800);
+    else setTimeout(function() { window.close(); }, 1500);
   }
-} catch(e) {}
-setTimeout(function() { window.close(); }, 1500);
+} catch(e) { setTimeout(function() { window.close(); }, 1500); }
 <\/script></body></html>`;
   return html(dashSuccessHtml);
 });
@@ -283,7 +306,7 @@ app.post('/api/agent/verify-secret', async (c) => {
   await c.env.AGENT_STATE.delete(failKey);
   // Issue session token (#1)
   const sessionToken = await issueSession(c.env, agentId);
-  return c.json({ ok: true, sessionToken });
+  return c.json({ ok: true, sessionToken });-preview
 });
 
 // Logout — invalidate session token
@@ -297,7 +320,7 @@ app.post('/api/me', async (c) => {
   try {
     const { accessToken } = await c.req.json() as any;
     const res = await fetch('https://api.twitter.com/2/users/me', { headers: { Authorization: `Bearer ${accessToken}` } });
-    const data = await res.json() as any;
+    const data = await res.json() as any;-preview
     if (!res.ok) throw new Error(data.detail || 'Failed to fetch user');
     return c.json(data.data);
   } catch (err) { return c.json({ error: String(err) }, 400); }
@@ -306,7 +329,7 @@ app.post('/api/me', async (c) => {
 app.post('/api/distill', async (c) => {
   try {
     const { sourceAccounts, accessToken, promptLang } = await c.req.json() as any;
-    const geminiModel = c.env.GEMINI_MODEL || 'gemini-2.5-pro-preview-03-25';
+    const geminiModel = c.env.GEMINI_MODEL || 'gemini-3.1-pro-preview';
     const gatewayConfig = { accountId: c.env.CF_ACCOUNT_ID, gateway: c.env.CF_GATEWAY_NAME, apiKey: c.env.CF_AIG_TOKEN };
     const tweetsByAccount = await fetchSourceTweets(sourceAccounts, accessToken);
     if (Object.keys(tweetsByAccount).length === 0) return c.json({ error: 'No tweets fetched. Check accounts/token.' }, 400);
@@ -320,7 +343,7 @@ app.post('/api/distill', async (c) => {
 app.post('/api/tune/sample', async (c) => {
   try {
     const { skill } = await c.req.json() as any;
-    const geminiModel = c.env.GEMINI_MODEL || 'gemini-2.5-pro-preview-03-25';
+    const geminiModel = c.env.GEMINI_MODEL || 'gemini-3.1-pro-preview';
     const gatewayConfig = { accountId: c.env.CF_ACCOUNT_ID, gateway: c.env.CF_GATEWAY_NAME, apiKey: c.env.CF_AIG_TOKEN };
     return c.json(await genSample(skill, geminiModel, gatewayConfig));
   } catch (err) { return c.json({ error: String(err) }, 500); }
@@ -329,7 +352,7 @@ app.post('/api/tune/sample', async (c) => {
 app.post('/api/tune/refine', async (c) => {
   try {
     const { skill, feedback } = await c.req.json() as any;
-    const geminiModel = c.env.GEMINI_MODEL || 'gemini-2.5-pro-preview-03-25';
+    const geminiModel = c.env.GEMINI_MODEL || 'gemini-3.1-pro-preview';
     const gatewayConfig = { accountId: c.env.CF_ACCOUNT_ID, gateway: c.env.CF_GATEWAY_NAME, apiKey: c.env.CF_AIG_TOKEN };
     return c.json({ skill: await refineSkill(skill, feedback, geminiModel, gatewayConfig) });
   } catch (err) { return c.json({ error: String(err) }, 500); }

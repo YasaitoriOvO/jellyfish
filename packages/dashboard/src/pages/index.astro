@@ -62,7 +62,10 @@ import Layout from "../layouts/Layout.astro";
         </div>
         <div class="flex" style="gap:8px; align-items:center;">
           <div style="position:relative; flex:1;">
-            <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.4;pointer-events:none;font-size:1rem;line-height:1">@</span>
+            <span
+              style="position:absolute;left:12px;top:50%;transform:translateY(-50%);opacity:.4;pointer-events:none;font-size:1rem;line-height:1"
+              >@</span
+            >
             <input
               type="text"
               id="dashboardHandle"
@@ -85,8 +88,10 @@ import Layout from "../layouts/Layout.astro";
           id="dashboardErr"
           style="color:var(--error);font-size:0.8rem;margin-top:6px;display:none;"
         >
-          <span class="lang-zh" id="dashErrZh">未找到该账号对应的 Agent，请先完成部署</span
-          ><span class="lang-en" id="dashErrEn">No Agent found for this handle. Please deploy first.</span
+          <span class="lang-zh" id="dashErrZh"
+            >未找到该账号对应的 Agent，请先完成部署</span
+          ><span class="lang-en" id="dashErrEn"
+            >No Agent found for this handle. Please deploy first.</span
           >
         </div>
       </div>
@@ -435,7 +440,6 @@ import Layout from "../layouts/Layout.astro";
     >
     <input type="number" id="likePct" step="0.1" value="0.8" />
 
-
     <div class="flex justify-between mt-8">
       <button class="btn btn-ghost btn-back" data-step="3"
         ><span class="lang-zh">← 返回</span><span class="lang-en">← Back</span
@@ -585,7 +589,7 @@ import Layout from "../layouts/Layout.astro";
       step: 0,
       mode: "create",
       geminiKey: "",
-      geminiModel: "gemini-2.5-pro",
+      geminiModel: "gemini-3.1-pro-preview",
       accessToken: "",
       refreshToken: "",
       agentName: "",
@@ -710,8 +714,8 @@ import Layout from "../layouts/Layout.astro";
       if (step === 4) {
         S.replyPct = parseFloat($("replyPct").value);
         S.likePct = parseFloat($("likePct").value);
-        S.cooldown = 3;         // fixed default
-        S.enableEvo = true;     // always on
+        S.cooldown = 3; // fixed default
+        S.enableEvo = true; // always on
       }
       if (step === 5) {
         S.memMode = $("memMode").value;
@@ -733,12 +737,15 @@ import Layout from "../layouts/Layout.astro";
     });
 
     $("gotoDashboardBtn").addEventListener("click", async () => {
-      const handle = ($("dashboardHandle").value || "").trim().replace(/^@/, "");
+      const handle = ($("dashboardHandle").value || "")
+        .trim()
+        .replace(/^@/, "");
       const isEn = document.body.classList.contains("en-mode");
       const errEl = $("dashboardErr");
       if (!handle) {
         $("dashErrZh") && ($("dashErrZh").textContent = "请输入 X 账号名");
-        $("dashErrEn") && ($("dashErrEn").textContent = "Please enter an X username");
+        $("dashErrEn") &&
+          ($("dashErrEn").textContent = "Please enter an X username");
         errEl.style.display = "block";
         return;
       }
@@ -747,17 +754,26 @@ import Layout from "../layouts/Layout.astro";
       btn.disabled = true;
       btn.innerHTML = isEn ? "⏳ Looking up..." : "⏳ 查找中...";
       try {
-        const res = await api("/api/agent/find-by-handle?handle=" + encodeURIComponent(handle));
+        const res = await api(
+          "/api/agent/find-by-handle?handle=" + encodeURIComponent(handle),
+        );
         if (res.agentId) {
-          window.location.href = "/dashboard?id=" + encodeURIComponent(res.agentId);
+          window.location.href =
+            "/dashboard?id=" + encodeURIComponent(res.agentId);
         } else {
-          $("dashErrZh") && ($("dashErrZh").textContent = "未找到 @" + handle + " 对应的 Agent，请先完成部署");
-          $("dashErrEn") && ($("dashErrEn").textContent = "No Agent found for @" + handle + ". Please deploy first.");
+          $("dashErrZh") &&
+            ($("dashErrZh").textContent =
+              "未找到 @" + handle + " 对应的 Agent，请先完成部署");
+          $("dashErrEn") &&
+            ($("dashErrEn").textContent =
+              "No Agent found for @" + handle + ". Please deploy first.");
           errEl.style.display = "block";
         }
       } catch (e) {
-        $("dashErrZh") && ($("dashErrZh").textContent = "查找失败: " + e.message);
-        $("dashErrEn") && ($("dashErrEn").textContent = "Lookup failed: " + e.message);
+        $("dashErrZh") &&
+          ($("dashErrZh").textContent = "查找失败: " + e.message);
+        $("dashErrEn") &&
+          ($("dashErrEn").textContent = "Lookup failed: " + e.message);
         errEl.style.display = "block";
       } finally {
         btn.disabled = false;

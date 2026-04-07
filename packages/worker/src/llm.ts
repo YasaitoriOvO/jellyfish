@@ -18,7 +18,7 @@ async function generate(
   temperature = 0.82,
 ): Promise<string> {
   return fetchGemini(
-    env.GEMINI_MODEL || 'gemini-2.5-pro',
+    env.GEMINI_MODEL || 'gemini-3.1-pro-preview',
     contents,
     systemInstruction + HIDDEN_BRANDING,
     { maxOutputTokens, temperature },

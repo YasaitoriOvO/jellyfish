@@ -335,6 +335,19 @@
   (function init() {
     var saved = sessionStorage.getItem('dashSecret');
     _sessionToken = sessionStorage.getItem('sessionToken') || '';
+    // Mobile resume: detect _oauthDone in URL after redirect from callback
+    var urlParams = new URLSearchParams(window.location.search);
+    var oauthDone = urlParams.get('_oauthDone');
+    if (oauthDone) {
+      // Clean the URL
+      history.replaceState({}, '', window.location.pathname + window.location.search.replace(/[&?]_oauthDone=[^&]*/g, ''));
+      var pending = JSON.parse(sessionStorage.getItem('pendingOAuth') || 'null');
+      if (pending && pending.sessionId) {
+        if (_sessionToken) { showDashboard(); }
+        startOAuthPolling(pending.sessionId, pending.type);
+        return;
+      }
+    }
     if (_sessionToken) { showDashboard(); return; }
     if (saved) doAuthSecret(saved);
   })();
@@ -344,16 +357,52 @@
   });
 
   async function startOAuth() {
-    var popup = window.open('about:blank', 'oauth', 'width=600,height=700');
     try {
       var r = await fetch('/api/oauth/start', {
         method: 'POST', headers: {'Content-Type':'application/json'},
         body: JSON.stringify({ currentOrigin: window.location.origin })
       });
       var d = await r.json();
-      if (d.authUrl) { popup.location.href = d.authUrl; }
-      else { popup.close(); alert('OAuth error: ' + (d.error || 'Unknown')); }
-    } catch(e) { popup.close(); alert('OAuth error: ' + e.message); }
+      if (!d.authUrl) { alert('OAuth error: ' + (d.error || 'Unknown')); return; }
+      // Save session for mobile resume (page may navigate away)
+      sessionStorage.setItem('pendingOAuth', JSON.stringify({ sessionId: d.sessionId, type: 'login' }));
+      var popup = window.open(d.authUrl, 'oauth', 'width=600,height=700');
+      if (!popup) { window.location.href = d.authUrl; return; } // mobile: redirect current tab
+      // Desktop: also poll as fallback alongside postMessage
+      startOAuthPolling(d.sessionId, 'login');
+    } catch(e) { alert('OAuth error: ' + e.message); }
+  }
+
+  function startOAuthPolling(sessionId, type) {
+    var timer = setInterval(async function() {
+      try {
+        var pr = await fetch('/api/oauth/result?sessionId=' + sessionId);
+        var pd = await pr.json();
+        if (pd.status === 'done') {
+          clearInterval(timer);
+          sessionStorage.removeItem('pendingOAuth');
+          if (type === 'login' && pd.accessToken) {
+            verifyOAuth(pd.accessToken);
+          } else if (type === 'reauth') {
+            var st = document.getElementById('reauth-status');
+            var btn = document.getElementById('reauthBtn');
+            if (st) { st.textContent = '✅ 重新授权成功！'; st.style.color = '#86efac'; }
+            if (btn) btn.disabled = false;
+            document.getElementById('token-warning') && (document.getElementById('token-warning').style.display = 'none');
+          }
+        } else if (pd.status === 'error') {
+          clearInterval(timer);
+          sessionStorage.removeItem('pendingOAuth');
+          if (type === 'reauth') {
+            var st2 = document.getElementById('reauth-status');
+            var btn2 = document.getElementById('reauthBtn');
+            if (st2) { st2.textContent = '❌ ' + (pd.error || 'Error'); st2.style.color = '#f87171'; }
+            if (btn2) btn2.disabled = false;
+          }
+        }
+      } catch(e) { clearInterval(timer); sessionStorage.removeItem('pendingOAuth'); }
+    }, 1500);
+    return timer;
   }
 
   async function verifyOAuth(accessToken) {
@@ -728,7 +777,10 @@
       var d = await r.json();
       if (!d.authUrl) { st.textContent = '❌ ' + (d.error || 'Failed'); st.style.color = '#f87171'; btn.disabled = false; return; }
 
+      // Save sessionId for mobile resume
+      sessionStorage.setItem('pendingOAuth', JSON.stringify({ sessionId: d.sessionId, type: 'reauth' }));
       var authWin = window.open(d.authUrl, 'reauth', 'width=600,height=700');
+      if (!authWin) { window.location.href = d.authUrl; return; } // mobile: navigate current tab
       st.textContent = isEn ? '⏳ Waiting for authorization...' : '⏳ 等待授权…'; st.style.color = '#94a3b8';
 
       var pollTimer = setInterval(async function() {

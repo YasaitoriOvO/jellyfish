@@ -85,7 +85,7 @@ export async function fetchGemini(
 // listGeminiModels: returns a fixed recommended list (no enumeration needed via Gateway)
 export async function listGeminiModels(_apiKey?: string, _gatewayUrl?: string): Promise<string[]> {
   return [
-    'gemini-2.5-pro-preview-03-25',
+    'gemini-3.1-pro-preview',
     'gemini-2.0-flash',
     'gemini-1.5-pro',
     'gemini-1.5-flash',

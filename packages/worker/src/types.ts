@@ -62,7 +62,7 @@ export interface Env {
   ADMIN_SECRET: string;
   /** Gemini API Key (已废弃，由 CF AI Gateway Token 接管) */
   GEMINI_API_KEY?: string;
-  /** Default Gemini Model Name, e.g. gemini-2.5-pro-preview-03-25 */
+  /** Default Gemini Model Name, e.g. gemini-3.1-pro-preview */
   GEMINI_MODEL?: string;
   /** Cloudflare Account ID (for AI Gateway) */
   CF_ACCOUNT_ID: string;
