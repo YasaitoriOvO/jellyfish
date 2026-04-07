@@ -428,12 +428,13 @@ app.post('/api/agent/create', async (c) => {
           id, owner_id, agent_name, agent_handle, agent_secret, source_accounts,
           refresh_token, access_token, token_expires_at, skill_text, reply_pct, like_pct,
           cooldown_days, auto_evo, vip_list, mem_whitelist, created_at, status
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, null, 0, ?, ?, ?, ?, ?, ?, ?, ?, 'active')
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, null, 0, ?, ?, ?, ?, ?, ?, ?, ?, 'active')
       `).bind(
         agentId, 'public',
         config.agentName ?? '', config.agentHandle ?? '', dashboardSecret,
         JSON.stringify(config.sourceAccounts ?? []),
-        refreshToken ?? '', skill ?? '',
+        refreshToken ?? '',
+        skill ?? '',
         config.defaultReplyProbability ?? 0.2, config.defaultLikeProbability ?? 0.8,
         config.spontaneousCooldownDays ?? 3, config.enableNightlyEvolution ? 1 : 0,
         JSON.stringify(vipList),
