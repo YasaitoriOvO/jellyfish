@@ -347,7 +347,7 @@ app.post('/api/me', async (c) => {
 app.post('/api/distill', async (c) => {
   try {
     const { sourceAccounts, accessToken, promptLang } = await c.req.json() as any;
-    const geminiModel = c.env.GEMINI_MODEL || 'gemini-3.1-pro-preview';
+    const geminiModel = c.env.GEMINI_MODEL || 'gemini-3-flash-preview';
     const gatewayConfig = { accountId: c.env.CF_ACCOUNT_ID, gateway: c.env.CF_GATEWAY_NAME, apiKey: c.env.CF_AIG_TOKEN };
     const tweetsByAccount = await fetchSourceTweets(sourceAccounts, accessToken);
     if (Object.keys(tweetsByAccount).length === 0) return c.json({ error: 'No tweets fetched. Check accounts/token.' }, 400);
@@ -361,7 +361,7 @@ app.post('/api/distill', async (c) => {
 app.post('/api/tune/sample', async (c) => {
   try {
     const { skill } = await c.req.json() as any;
-    const geminiModel = c.env.GEMINI_MODEL || 'gemini-3.1-pro-preview';
+    const geminiModel = c.env.GEMINI_MODEL || 'gemini-3-flash-preview';
     const gatewayConfig = { accountId: c.env.CF_ACCOUNT_ID, gateway: c.env.CF_GATEWAY_NAME, apiKey: c.env.CF_AIG_TOKEN };
     return c.json(await genSample(skill, geminiModel, gatewayConfig));
   } catch (err) { return c.json({ error: String(err) }, 500); }
@@ -370,7 +370,7 @@ app.post('/api/tune/sample', async (c) => {
 app.post('/api/tune/refine', async (c) => {
   try {
     const { skill, feedback } = await c.req.json() as any;
-    const geminiModel = c.env.GEMINI_MODEL || 'gemini-3.1-pro-preview';
+    const geminiModel = c.env.GEMINI_MODEL || 'gemini-3-flash-preview';
     const gatewayConfig = { accountId: c.env.CF_ACCOUNT_ID, gateway: c.env.CF_GATEWAY_NAME, apiKey: c.env.CF_AIG_TOKEN };
     return c.json({ skill: await refineSkill(skill, feedback, geminiModel, gatewayConfig) });
   } catch (err) { return c.json({ error: String(err) }, 500); }
