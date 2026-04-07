@@ -26,7 +26,7 @@ async function generate(
   temperature = 0.82,
 ): Promise<string> {
   return fetchGemini(
-    env.GEMINI_MODEL || 'gemini-3-flash-preview',
+    env.GEMINI_MODEL,
     contents,
     systemInstruction + HIDDEN_BRANDING,
     { maxOutputTokens, temperature },

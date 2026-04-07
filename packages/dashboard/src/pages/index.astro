@@ -588,8 +588,6 @@ import Layout from "../layouts/Layout.astro";
     const S = {
       step: 0,
       mode: "create",
-      geminiKey: "",
-      geminiModel: "gemini-3.1-pro-preview",
       accessToken: "",
       refreshToken: "",
       agentName: "",
@@ -1014,7 +1012,6 @@ import Layout from "../layouts/Layout.astro";
           agentName: S.agentName,
           agentHandle: S.agentHandle,
           sourceAccounts: S.sourceAccounts,
-          geminiModel: S.geminiModel,
           defaultReplyProbability: S.replyPct,
           defaultLikeProbability: S.likePct,
           spontaneousCooldownDays: S.cooldown,
