@@ -23,11 +23,9 @@ const { title } = Astro.props;
     <div class="blob blob-2"></div>
     
     <div class="page-wrapper">
-      <header class="logo-area" style="position: relative;">
-        <div style="position: absolute; right: 0; top: 0;">
-          <button id="glLangToggle" class="btn btn-ghost" style="padding: 6px 12px; font-size: 0.85rem; height: auto;">🌐 English</button>
-        </div>
+      <header class="logo-area">
         <h1><span class="text-gradient">Jellyfish</span>: Another Agent</h1>
+        <button id="glLangToggle" class="btn btn-ghost lang-toggle-btn">🌐 English</button>
       </header>
       
       <main class="content-wrapper">
@@ -144,8 +142,47 @@ const { title } = Astro.props;
   }
 
   .logo-area {
-    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
     margin-bottom: 40px;
+    flex-wrap: wrap;
+  }
+
+  .logo-area h1 {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .lang-toggle-btn {
+    padding: 6px 12px !important;
+    font-size: 0.85rem !important;
+    height: auto !important;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 480px) {
+    .logo-area {
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+    .logo-area h1 {
+      font-size: 1.8rem;
+    }
+    .lang-toggle-btn {
+      align-self: flex-end;
+    }
+    .page-wrapper {
+      padding: 20px 16px;
+    }
+    .content-wrapper {
+      padding: 20px 16px;
+      border-radius: 16px;
+    }
+    h2 { font-size: 1.4rem; }
   }
 
   h1 {
