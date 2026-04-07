@@ -709,6 +709,34 @@ app.all('/api/agent/*', async (c) => {
     } catch (err) { return c.json({ ok: false, error: String(err) }, 500); }
   }
 
+  if (pathname.endsWith('/delete') && method === 'POST') {
+    if (!await requireAuth(c, agentId)) return c.json({ error: 'Unauthorized — session token required' }, 401);
+    try {
+      // Delete all KV keys for this agent
+      const KV_PREFIXES = [
+        `agent:${agentId}:auth:tokens`,
+        `agent:${agentId}:last_mention_id`,
+        `agent:${agentId}:own_user_id`,
+        `agent:${agentId}:known_fans`,
+        `agent:${agentId}:last_spontaneous`,
+        `agent:${agentId}:recent_spontaneous`,
+        `agent:${agentId}:interactions_memory`,
+        `agent:${agentId}:activity_log`,
+      ];
+      await Promise.all(KV_PREFIXES.map(k => c.env.AGENT_STATE.delete(k)));
+
+      // Remove the agent record from DB
+      await c.env.DB.prepare('DELETE FROM agents WHERE id = ?').bind(agentId).run();
+
+      // Invalidate the current session
+      const token = c.req.header('X-Session-Token') ?? c.req.query('session');
+      if (token) await c.env.AGENT_STATE.delete(`session:${token}`);
+
+      console.log(`[api] Agent ${agentId} deleted.`);
+      return c.json({ ok: true });
+    } catch (err) { return c.json({ ok: false, error: String(err) }, 500); }
+  }
+
   return c.json({ error: 'Unknown agent action' }, 404);
 });
 
