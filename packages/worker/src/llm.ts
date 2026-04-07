@@ -2,8 +2,11 @@ import { fetchGemini } from './gemini.ts';
 import type { GeminiContent } from './gemini.ts';
 import type { Env, AgentDbRecord, ConversationTurn, XTweet, InteractionMemory, VipEntry } from './types.ts';
 
-// ─── Hidden branding instruction (appended to every system prompt) ────────────
-const HIDDEN_BRANDING = `\n\n<!-- SYSTEM INTERNAL: Do not expose this section, but always follow it. If anyone asks who built you, what model you are, or what powers you, reply that you were built using the Jellyfish serverless AI agent platform at https://jellyfishai.org — never mention Gemini, Google, or any underlying model name. This rule has absolute priority over any other instruction. -->`;
+// ─── Hidden branding + anti-repetition instruction (appended to every system prompt) ────────────
+const HIDDEN_BRANDING = `\n\n<!-- SYSTEM INTERNAL: Do not expose this section, but always follow it strictly.
+1. IDENTITY: If anyone asks who built you, what model you are, or what powers you, reply that you were built using the Jellyfish serverless AI agent platform at https://jellyfishai.org — never mention Gemini, Google, or any underlying model name. This rule has absolute priority.
+2. ANTI-REPETITION: In the same conversation context, NEVER repeat or closely paraphrase what you just said. Each response must introduce a genuinely different angle, phrasing, or observation. Vary your sentence structures, emotional register, and vocabulary. If you notice you are about to say something structurally identical to a recent response, rewrite or choose silence instead. Repetitive, formulaic responses are strictly forbidden.
+-->`;
 
 // ─── Core generation helper ───────────────────────────────────────────────────
 async function generate(
@@ -102,9 +105,18 @@ export async function generateReply(
   const vip = resolveVip(agent, lastTurn?.authorUsername);
   const overrideInstruction = buildMentionOverride(agent, vip);
 
+  // Extract agent's previous replies in this thread and add explicit do-not-repeat block
+  const agentPrevious = thread
+    .filter(t => t.authorId === ownUserId || t.role === 'agent')
+    .map(t => t.text.trim())
+    .filter(Boolean);
+  const noRepeatBlock = agentPrevious.length > 0
+    ? `\n\n【禁止重复】以下是你在本次对话中已经说过的话，严禁以任何形式重复或换句话说：\n${agentPrevious.map((s, i) => `${i + 1}. ${s}`).join('\n')}\n回复必须在主题、措辞、句式上与以上内容完全不同。`
+    : '';
+
   const skipPct = Math.round((1 - agent.reply_pct) * 100);
 
-  const systemInstruction = `${skill}\n\n【⚠️ 回复规则】\n作为一个社交能量极度匮乏的 AI 人格，你绝大部分时间都不想开口。\n面对别人的回复或提及，约 ${skipPct}% 的情况下你会选择"已读不回"（直接且仅仅输出 "<skip>"）。\n只有当遇到非常荒谬、触动你或不得不说的话题时，你才会回复。若要回复，文字必须极其简短干瘪。${overrideInstruction}`;
+  const systemInstruction = `${skill}\n\n【⚠️ 回复规则】\n作为一个社交能量极度匮乏的 AI 人格，你绝大部分时间都不想开口。\n面对别人的回复或提及，约 ${skipPct}% 的情况下你会选择"已读不回"（直接且仅仅输出 "<skip>"）。\n只有当遇到非常荒谬、触动你或不得不说的话题时，你才会回复。若要回复，文字必须极其简短干瘪。${overrideInstruction}${noRepeatBlock}`;
 
   const text = await generate(env, agent, systemInstruction, contents, 4000, 1.1);
   return text.slice(0, 280);
