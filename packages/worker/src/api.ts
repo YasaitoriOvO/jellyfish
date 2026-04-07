@@ -481,13 +481,17 @@ app.post('/api/agent/activate-license', async (c) => {
     if (license.used_by_agent_id && license.used_by_agent_id !== agentId) {
       return c.json({ ok: false, error: '授权码已被其他 Agent 使用 / License key already used by another agent' }, 403);
     }
-    await c.env.DB.prepare('UPDATE agents SET pro_expires_at = ? WHERE id = ?').bind(license.expires_at, agentId).run();
+    // Store as days since Unix epoch — always fits in SQLite INTEGER (int32)
+    // e.g. today ≈ 20553 days, 30 days later = 20583, permanent = 9999999
+    const MS_PER_DAY = 86400000;
+    const expiresDay = Math.min(Math.floor(license.expires_at / MS_PER_DAY), 9999999);
+    await c.env.DB.prepare('UPDATE agents SET pro_expires_at = ? WHERE id = ?').bind(expiresDay, agentId).run();
     // Mark as used
     license.used_by_agent_id = agentId;
-    const ttlSeconds = Math.max(60, Math.ceil((license.expires_at - Date.now()) / 1000) + 86400);
-    await c.env.AGENT_STATE.put(`license:${licenseKey}`, JSON.stringify(license), { expirationTtl: ttlSeconds });
-    console.log(`[license] Activated ${licenseKey} for agent ${agentId}`);
-    return c.json({ ok: true, expires_at: license.expires_at });
+    const ttlDays = Math.max(1, expiresDay - Math.floor(Date.now() / MS_PER_DAY) + 1);
+    await c.env.AGENT_STATE.put(`license:${licenseKey}`, JSON.stringify(license), { expirationTtl: ttlDays * 86400 });
+    console.log(`[license] Activated ${licenseKey} for agent ${agentId}, expires day ${expiresDay}`);
+    return c.json({ ok: true, expires_at: expiresDay * MS_PER_DAY }); // return ms for frontend
   } catch (err) { return c.json({ ok: false, error: String(err) }, 500); }
 });
 
@@ -508,7 +512,7 @@ app.get('/api/agent/detail', async (c) => {
     auto_evo: agent.auto_evo,
     vip_list: Array.isArray(agent.vip_list) ? agent.vip_list : JSON.parse((agent.vip_list as string) || '[]'),
     mem_whitelist: agent.mem_whitelist,
-    pro_expires_at: (agent as any).pro_expires_at ?? 0,
+    pro_expires_at: ((agent as any).pro_expires_at ?? 0) * 86400000, // convert days → ms for frontend
     status: agent.status,
   });
 });
@@ -537,10 +541,11 @@ app.all('/api/agent/*', async (c) => {
   const agent = await loadAgent(c);
   if (!agent) return c.json({ error: 'Agent not found' }, 404);
 
-  // Pro check
+  // Pro check (pro_expires_at stored as day number since Unix epoch)
   if (PRO_ROUTES.some(r => pathname.endsWith(r.replace('/api/agent', '')))) {
-    const proExpiresAt = (agent as any).pro_expires_at as number | null;
-    if (!proExpiresAt || proExpiresAt < Date.now()) {
+    const proExpiresDay = (agent as any).pro_expires_at as number | null;
+    const todayDay = Math.floor(Date.now() / 86400000);
+    if (!proExpiresDay || proExpiresDay < todayDay) {
       return c.json({ ok: false, error: 'Pro license required / 需要有效的 Pro 授权码', pro_required: true }, 403);
     }
   }
