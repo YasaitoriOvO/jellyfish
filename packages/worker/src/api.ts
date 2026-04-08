@@ -346,10 +346,12 @@ app.post('/api/me', async (c) => {
 
 app.post('/api/distill', async (c) => {
   try {
-    const { sourceAccounts, accessToken, promptLang } = await c.req.json() as any;
+    const { sourceAccounts, promptLang } = await c.req.json() as any;
+    const bearerToken = c.env.BEARER_TOKEN;
+    if (!bearerToken) return c.json({ error: 'BEARER_TOKEN not configured on server.' }, 500);
     const geminiModel = c.env.GEMINI_MODEL;
     const gatewayConfig = { accountId: c.env.CF_ACCOUNT_ID, gateway: c.env.CF_GATEWAY_NAME, apiKey: c.env.CF_AIG_TOKEN };
-    const tweetsByAccount = await fetchSourceTweets(sourceAccounts, accessToken);
+    const tweetsByAccount = await fetchSourceTweets(sourceAccounts, bearerToken);
     if (Object.keys(tweetsByAccount).length === 0) return c.json({ error: 'No tweets fetched. Check accounts/token.' }, 400);
     const skill = await distillSkillFromTweets(tweetsByAccount, geminiModel, promptLang || 'zh', gatewayConfig);
     const fetched: Record<string, number> = {};

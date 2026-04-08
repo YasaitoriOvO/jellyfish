@@ -89,6 +89,9 @@
       <span class="lang-zh">🔍 查找 Agent</span><span class="lang-en">🔍 Find Agent</span>
     </button>
     <div id="find-err" style="color:var(--error);font-size:.82rem;margin-top:10px;display:none"></div>
+    <div style="margin-top:20px;text-align:center;border-top:1px solid var(--card-border);padding-top:16px">
+      <a href="/" style="font-size:.82rem;color:var(--text-muted);text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:color .15s" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'">← <span class="lang-zh">返回首页</span><span class="lang-en">Back to Home</span></a>
+    </div>
   </div>
 
   <!-- Step 2: Login Options (shown after agent found, or when ?id= present) -->
@@ -115,6 +118,9 @@
       <span class="lang-zh">密码验证</span><span class="lang-en">Verify Password</span>
     </button>
     <div id="auth-err" style="color:var(--error);font-size:.82rem;margin-top:10px;display:none"></div>
+    <div style="margin-top:20px;text-align:center;border-top:1px solid var(--card-border);padding-top:16px">
+      <a href="/" style="font-size:.82rem;color:var(--text-muted);text-decoration:none;display:inline-flex;align-items:center;gap:5px;transition:color .15s" onmouseover="this.style.color='var(--primary)'" onmouseout="this.style.color='var(--text-muted)'">← <span class="lang-zh">返回首页</span><span class="lang-en">Back to Home</span></a>
+    </div>
   </div>
 
   <!-- Step 3: Verifying indicator -->
@@ -407,8 +413,7 @@
     _cachedAgentHandle = agentHandle || '';
     document.getElementById('auth-agent-name').textContent = _cachedAgentName;
     document.getElementById('auth-agent-handle').textContent = agentHandle ? '@' + agentHandle : '';
-    // Hide the "Change" button only when agentId came directly from the URL (user has a link)
-    document.getElementById('auth-change-agent').style.display = _agentIdFromUrl ? 'none' : '';
+    document.getElementById('auth-change-agent').style.display = '';
     document.getElementById('auth-step-find').style.display = 'none';
     document.getElementById('auth-step-login').style.display = 'block';
     document.getElementById('auth-step-verifying').style.display = 'none';

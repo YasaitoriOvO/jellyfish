@@ -612,7 +612,6 @@ import Layout from "../layouts/Layout.astro";
       '<span class="lang-zh">部署</span><span class="lang-en">Deploy</span>',
     ];
     const STEPS_DISTILL = [
-      '<span class="lang-zh">授权</span><span class="lang-en">Auth</span>',
       '<span class="lang-zh">蒸馏</span><span class="lang-en">Distill</span>',
     ];
 
@@ -626,7 +625,7 @@ import Layout from "../layouts/Layout.astro";
       nav.innerHTML = "";
 
       const dotIndex =
-        S.mode === "distill" ? (S.step === 3 ? 1 : 0) : S.step - 1;
+        S.mode === "distill" ? 0 : S.step - 1;
 
       STEPS.forEach((lbl, i) => {
         const div = document.createElement("div");
@@ -656,17 +655,8 @@ import Layout from "../layouts/Layout.astro";
       if (n > S.step && !validate(S.step)) return;
       if (S.mode === "distill" && n > 3) return; // Prevent forward nav in distill mode
 
-      if (S.mode === "distill") {
-        if (n === 2) {
-          if (S.step === 1)
-            n = 3; // Forward skip s2
-          else if (S.step === 3) n = 1; // Backward skip s2
-        }
-      }
-
-      if (n === 3) {
-        if (S.mode === "distill")
-          $("s3next") ? ($("s3next").style.display = "none") : null;
+      if (n === 3 && S.mode === "distill") {
+        $("s3next") ? ($("s3next").style.display = "none") : null;
       }
 
       document
@@ -681,6 +671,7 @@ import Layout from "../layouts/Layout.astro";
 
     function validate(step) {
       if (S.mode === "distill" && step >= 3) return true; // safety
+      if (S.mode === "distill" && step === 1) return true; // distill mode skips auth
       if (step === 1 && !S.refreshToken) {
         showErr(
           "err1",
@@ -731,7 +722,7 @@ import Layout from "../layouts/Layout.astro";
     });
     $("modeDistillBtn").addEventListener("click", () => {
       S.mode = "distill";
-      go(1);
+      go(3);
     });
 
     $("gotoDashboardBtn").addEventListener("click", async () => {
@@ -923,7 +914,6 @@ import Layout from "../layouts/Layout.astro";
           .value.split(",")
           .map((s) => s.trim())
           .filter(Boolean),
-        accessToken: S.accessToken,
         promptLang: document.querySelector('input[name="pLang"]:checked').value,
       };
       const r = await api("/api/distill", payload);

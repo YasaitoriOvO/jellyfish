@@ -81,6 +81,8 @@ export interface Env {
   KO_FI_MINIMUM_AMOUNT?: string;
   /** Secret for protecting the HTTP /api/cron trigger (set via wrangler secret put CRON_SECRET) */
   CRON_SECRET?: string;
+  /** Twitter Bearer Token (App-only) used for the distillation demo flow — set via .dev.vars or wrangler secret */
+  BEARER_TOKEN?: string;
 }
 
 // ─── X API types ───────────────────────────────────────────────────────────────

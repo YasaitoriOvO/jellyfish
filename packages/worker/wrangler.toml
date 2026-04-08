@@ -45,6 +45,7 @@ database_id = "13e065a3-b527-4613-8e8f-1ec7e1933d3f"
 # CF_AIG_TOKEN           — Cloudflare AI Gateway Token (generated in Gateway → Auth)
 # GEMINI_MODEL           — (optional) Default model, e.g. gemini-3.1-pro-preview
 # KO_FI_VERIFICATION_TOKEN — Ko-Fi Webhook verification token (Ko-Fi → Webhooks settings)
+# BEARER_TOKEN           — Twitter App-only Bearer Token, used by /api/distill (no user OAuth needed)
 
 [vars]
 GEMINI_MODEL = "gemini-3-flash-preview"
