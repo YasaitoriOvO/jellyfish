@@ -373,39 +373,33 @@ import Layout from "../layouts/Layout.astro";
 
     <div id="err3" class="alert alert-error"></div>
 
-
     <div class="section-title mt-8">
-      <span class="lang-zh">💬 互动测试</span><span class="lang-en">💬 Interactive Test</span>
-    </div>
-    <div class="subtitle" style="margin-bottom:12px">
-      <span class="lang-zh">输入任意内容，即时查看当前人格如何回应。</span>
-      <span class="lang-en">Type anything and see how the persona responds in real time.</span>
-    </div>
-
-    <!-- Chat history -->
-    <div id="chatHistory" style="display:flex;flex-direction:column;gap:10px;min-height:60px;max-height:320px;overflow-y:auto;padding:4px 2px;margin-bottom:12px;border:1px solid var(--input-border);border-radius:12px;padding:12px;background:var(--input-bg)"></div>
-
-    <!-- Input row -->
-    <div style="display:flex;gap:8px;align-items:flex-end">
-      <textarea
-        id="chatInput"
-        rows="2"
-        style="flex:1;resize:none;min-height:44px;font-size:.88rem;padding:10px 14px;margin-top:0"
-        data-ph-zh="输入任意内容（Enter 发送，Shift+Enter 换行）"
-        data-ph-en="Type a message (Enter to send, Shift+Enter for newline)"
-        placeholder="输入任意内容（Enter 发送，Shift+Enter 换行）"
-      ></textarea>
-      <button class="btn btn-primary" id="chatSendBtn" style="height:44px;padding:0 18px;flex-shrink:0">
-        <span class="lang-zh">发送</span><span class="lang-en">Send</span>
-      </button>
-    </div>
-    <div id="chatLoading" style="display:none;margin-top:8px" class="mt-2">
-      <div class="dot-pulse"></div><span
-        ><span class="lang-zh">回应中……</span><span class="lang-en">Responding…</span></span
+      <span class="lang-zh">🎲 验证模型效果</span><span class="lang-en"
+        >🎲 Verify Model Output</span
       >
     </div>
-    <div id="chatErr" class="alert alert-error"></div>
-
+    <div class="subtitle" style="margin-bottom:8px">
+      <span class="lang-zh"
+        >生成演练样本以调优 Agent
+        的发言。如果不满意，可修改上方的系统提示词后重新生成。</span
+      ><span class="lang-en"
+        >Generate practice samples to test current persona. Modify prompt above
+        if unsatisfied.</span
+      >
+    </div>
+    <button class="btn btn-ghost w-full" id="genSampleBtn"
+      ><span class="lang-zh">🎲 生成测试样本</span><span class="lang-en"
+        >🎲 Generate Test Samples</span
+      ></button
+    >
+    <div id="sampleLoading" style="display:none" class="mt-4">
+      <div class="dot-pulse"></div><span
+        ><span class="lang-zh">正在思考……</span><span class="lang-en"
+          >Thinking...</span
+        ></span
+      >
+    </div>
+    <div id="sampleRes" class="sample-box"></div>
 
     <div class="flex justify-between mt-8">
       <button class="btn btn-ghost btn-back" data-step="2"
@@ -944,61 +938,38 @@ import Layout from "../layouts/Layout.astro";
       $("skillText").value = r.skill;
     });
 
-    // Interactive chat test
-    function appendChatBubble(role, text) {
-      const history = $("chatHistory");
-      const isUser = role === "user";
-      const isSkip = text && text.trim().toLowerCase() === "<skip>";
-      const bubble = document.createElement("div");
-      bubble.style.cssText = `display:flex;flex-direction:column;align-items:${isUser ? "flex-end" : "flex-start"};gap:2px`;
-      const inner = document.createElement("div");
-      inner.style.cssText = `max-width:85%;padding:9px 14px;border-radius:${isUser ? "14px 14px 4px 14px" : "14px 14px 14px 4px"};font-size:.88rem;line-height:1.55;word-break:break-word;${isUser ? "background:var(--primary);color:#fff" : "background:var(--input-bg);border:1px solid var(--input-border);color:var(--text)"}`;
-      if (isSkip) {
-        inner.innerHTML = `<span style="opacity:.6;font-size:.82rem">🚫 <span class="lang-zh">已读不回</span><span class="lang-en">Skip</span></span>`;
-      } else {
-        inner.textContent = text;
-      }
-      bubble.appendChild(inner);
-      const lbl = document.createElement("div");
-      lbl.style.cssText = "font-size:.72rem;opacity:.4;margin:0 4px";
-      lbl.textContent = isUser ? (document.body.classList.contains("en-mode") ? "You" : "你") : "Agent";
-      bubble.appendChild(lbl);
-      history.appendChild(bubble);
-      history.scrollTop = history.scrollHeight;
-    }
+    // Tune
+    $("genSampleBtn").addEventListener("click", async () => {
+      $("sampleLoading").style.display = "flex";
+      $("genSampleBtn").disabled = true;
+      const payload = { skill: $("skillText").value };
+      const r = await api("/api/tune/sample", payload);
+      $("sampleLoading").style.display = "none";
+      $("genSampleBtn").disabled = false;
 
-    async function sendChat() {
-      const input = $("chatInput");
-      const msg = (input.value || "").trim();
-      const skill = $("skillText").value.trim();
-      const errEl = $("chatErr");
-      errEl.className = "alert alert-error";
-      if (!msg) return;
-      if (!skill) {
-        errEl.textContent = document.body.classList.contains("en-mode") ? "Please fill in a persona first" : "请先填入人格配置";
-        errEl.className = "alert alert-error show";
-        return;
-      }
-      input.value = "";
-      appendChatBubble("user", msg);
-      $("chatLoading").style.display = "flex";
-      $("chatSendBtn").disabled = true;
-      const r = await api("/api/tune/chat", { skill, userMessage: msg });
-      $("chatLoading").style.display = "none";
-      $("chatSendBtn").disabled = false;
       if (r.error) {
-        errEl.textContent = r.error;
-        errEl.className = "alert alert-error show";
+        $("sampleRes").innerHTML =
+          `<div style="color:var(--error)">❌ ${r.error}</div>`;
         return;
       }
-      appendChatBubble("agent", r.reply);
-    }
-
-    $("chatSendBtn").addEventListener("click", sendChat);
-    $("chatInput").addEventListener("keydown", (e) => {
-      if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendChat(); }
+      const isSkip = (t) => t && t.trim().toLowerCase() === "<skip>";
+      const renderContent = (t) =>
+        isSkip(t)
+          ? `<span style="display:inline-block;padding:2px 10px;border-radius:6px;background:rgba(255,255,255,0.06);color:var(--text-muted);font-size:0.85rem;letter-spacing:0.05em;">🚫 <span class="lang-zh">已读不回</span><span class="lang-en">Skip</span></span>`
+          : t;
+      let h = "";
+      if (r.tweet) {
+        h += `<div style="margin-top:16px;background:var(--input-bg);padding:12px;border-radius:12px;">`;
+        h += `<div style="font-size:12px;color:var(--primary)"><span class="lang-zh">✏️ 自发推文</span><span class="lang-en">✏️ Spontaneous Tweet</span></div><div style="margin-top:8px">${renderContent(r.tweet)}</div>`;
+        h += `</div>`;
+      }
+      if (r.reply) {
+        h += `<div style="margin-top:16px;background:var(--input-bg);padding:12px;border-radius:12px;">`;
+        h += `<div style="font-size:12px;color:var(--primary)"><span class="lang-zh">💬 互动回复</span><span class="lang-en">💬 Interactive Reply</span></div><div style="font-size:13px;color:var(--text-muted)">Context: [@stranger] 说了: 这你们华人都是一个怎么想的？</div><div style="margin-top:8px">${renderContent(r.reply)}</div>`;
+        h += `</div>`;
+      }
+      $("sampleRes").innerHTML = h;
     });
-
 
     // Memory UI Bind
     $("memMode").addEventListener("change", () => {

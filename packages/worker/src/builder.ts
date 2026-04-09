@@ -78,19 +78,3 @@ export async function refineSkill(
     gatewayConfig,
   ).catch(() => skill);
 }
-export async function chatWithPersona(
-  skill: string,
-  userMessage: string,
-  geminiModel: string,
-  gatewayConfig: GatewayConfig,
-): Promise<string> {
-  const prompt = `[@tester] 说了:\n${userMessage}\n请用这个人设回复（可以输出 <skip> 表示不回复）：`;
-  const reply = await fetchGemini(
-    geminiModel,
-    [{ role: 'user', parts: [{ text: prompt }] }],
-    skill,
-    { maxOutputTokens: 500, temperature: 1.0 },
-    undefined, undefined, gatewayConfig,
-  );
-  return reply ?? '(no response)';
-}

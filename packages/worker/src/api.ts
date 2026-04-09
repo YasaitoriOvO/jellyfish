@@ -4,7 +4,7 @@ import type { Env, AgentDbRecord } from './types.ts';
 import { runMentionLoop, runSpontaneousTweet, runTimelineEngagement, runMemoryRefresh, runNightlyEvolution } from './agent.ts';
 import { getMe, getUserByUsername, getUserTweets } from './twitter.ts';
 import { getLastMentionId, getCachedOwnUserId, getInteractionsMemory, getActivityLog } from './memory.ts';
-import { fetchSourceTweets, distillSkillFromTweets, genSample, refineSkill, chatWithPersona } from './builder.ts';
+import { fetchSourceTweets, distillSkillFromTweets, genSample, refineSkill } from './builder.ts';
 import { listGeminiModels } from './gemini.ts';
 import { getValidAccessToken } from './auth.ts';
 import { runScheduled, getAllActiveAgents } from './scheduled.ts';
@@ -377,19 +377,6 @@ app.post('/api/tune/refine', async (c) => {
     return c.json({ skill: await refineSkill(skill, feedback, geminiModel, gatewayConfig) });
   } catch (err) { return c.json({ error: String(err) }, 500); }
 });
-
-app.post('/api/tune/chat', async (c) => {
-  try {
-    const { skill, userMessage } = await c.req.json() as any;
-    if (!skill?.trim()) return c.json({ error: 'skill is required' }, 400);
-    if (!userMessage?.trim()) return c.json({ error: 'userMessage is required' }, 400);
-    const geminiModel = c.env.GEMINI_MODEL;
-    const gatewayConfig = { accountId: c.env.CF_ACCOUNT_ID, gateway: c.env.CF_GATEWAY_NAME, apiKey: c.env.CF_AIG_TOKEN };
-    const reply = await chatWithPersona(skill, userMessage, geminiModel, gatewayConfig);
-    return c.json({ reply });
-  } catch (err) { return c.json({ error: String(err) }, 500); }
-});
-
 
 app.get('/api/models', async (c) => {
   try {
