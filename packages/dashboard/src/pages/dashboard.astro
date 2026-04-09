@@ -1059,7 +1059,7 @@
     try {
       var r = await fetch(getApiUrl('/api/agent/toggle-status'), {
         method: 'POST',
-        headers: getAuthHeaders(),
+        headers: authHeaders(),
       });
       var d = await r.json();
       if (d.ok) {
@@ -1114,7 +1114,7 @@
     try {
       var r = await fetch(getApiUrl('/api/agent/delete'), {
         method: 'POST',
-        headers: getAuthHeaders(),
+        headers: authHeaders(),
       });
       var d = await r.json();
       if (d.ok) {
