@@ -3,7 +3,7 @@ import { cors } from 'hono/cors';
 import type { Env, AgentDbRecord } from './types.ts';
 import { runMentionLoop, runSpontaneousTweet, runTimelineEngagement, runMemoryRefresh, runNightlyEvolution, runRefreshSourceNames } from './agent.ts';
 import { getMe, getUserByUsername, getUserTweets } from './twitter.ts';
-import { getLastMentionId, getCachedOwnUserId, getInteractionsMemory, getActivityLog, getSourceNames } from './memory.ts';
+import { getLastMentionId, getCachedOwnUserId, saveOwnUserId, getInteractionsMemory, getActivityLog, getSourceNames } from './memory.ts';
 import { fetchSourceTweets, distillSkillFromTweets, genSample, refineSkill } from './builder.ts';
 import { listGeminiModels } from './gemini.ts';
 import { getValidAccessToken } from './auth.ts';
@@ -270,18 +270,71 @@ app.post('/api/agent/reauth-start', async (c) => {
 app.post('/api/agent/verify-owner', async (c) => {
   const { accessToken, agentId } = await c.req.json() as any;
   if (!accessToken || !agentId) return c.json({ ok: false, error: 'Missing params' }, 400);
+
+  // ── Step 1: get the Twitter user ID of the person trying to log in ──────────
   const meRes = await fetch('https://api.twitter.com/2/users/me', { headers: { Authorization: `Bearer ${accessToken}` } });
   const meData = await meRes.json() as any;
   if (!meRes.ok) return c.json({ ok: false, error: meData.detail ?? 'Twitter API error' }, 401);
-  const username: string = meData.data?.username ?? '';
-  const { results } = await c.env.DB.prepare('SELECT agent_handle FROM agents WHERE id = ?').bind(agentId).all();
-  if (!results || results.length === 0) return c.json({ ok: false, error: 'Agent not found' }, 404);
-  const agentHandle = (results[0] as any).agent_handle as string;
-  const ok = username.toLowerCase() === agentHandle.toLowerCase();
-  if (!ok) return c.json({ ok: false, username, agentHandle });
+  const loginUserId: string = meData.data?.id ?? '';
+  const loginUsername: string = meData.data?.username ?? '';
+  const loginName: string = meData.data?.name ?? '';
+
+  // ── Step 2: get the agent record directly from DB (agentId is in the body, not ?id=) ──
+  const raw = await c.env.DB.prepare('SELECT * FROM agents WHERE id = ?').bind(agentId).all();
+  if (!raw.results || raw.results.length === 0) return c.json({ ok: false, error: 'Agent not found' }, 404);
+  const agentRow = raw.results[0] as Record<string, unknown>;
+  const agent = {
+    ...agentRow,
+    source_accounts: JSON.parse((agentRow.source_accounts as string) || '[]'),
+    vip_list: JSON.parse((agentRow.vip_list as string) || '[]'),
+    mem_whitelist: (agentRow.mem_whitelist === 'all' ? 'all' : JSON.parse((agentRow.mem_whitelist as string) || '[]'))
+  } as unknown as import('./types.ts').AgentDbRecord;
+
+  // ── Step 3: resolve the agent's Twitter user ID ───────────────────────────────
+  // First check the KV cache (populated by runMentionLoop → resolveOwnUserId).
+  // Fall back to a live /users/me call only when the cache is cold.
+  let agentUserId: string | null = await getCachedOwnUserId(c.env, agentId);
+  if (!agentUserId) {
+    try {
+      const agentAccessToken = await getValidAccessToken(c.env, agent);
+      const agentMeRes = await fetch('https://api.twitter.com/2/users/me', { headers: { Authorization: `Bearer ${agentAccessToken}` } });
+      if (agentMeRes.ok) {
+        const agentMeData = await agentMeRes.json() as any;
+        agentUserId = agentMeData.data?.id ?? null;
+        // Warm the KV cache so subsequent logins are instant
+        if (agentUserId) await saveOwnUserId(c.env, agentId, agentUserId);
+      }
+    } catch (err) {
+      console.warn(`[verify-owner] Could not resolve agent user ID for ${agentId}:`, err);
+    }
+  }
+
+  // ── Step 4: compare by user ID (immutable) ───────────────────────────────────
+  // Fallback: if we couldn't reach Twitter for agent ID, compare by handle (old behavior)
+  const ok = agentUserId
+    ? loginUserId === agentUserId
+    : loginUsername.toLowerCase() === agent.agent_handle.toLowerCase();
+
+  if (!ok) {
+    return c.json({ ok: false, username: loginUsername, agentHandle: agent.agent_handle });
+  }
+
+  // ── Step 5: auto-sync latest name/handle back to DB ─────────────────────────
+  // Username may have changed — keep the DB record current.
+  if (loginUsername && loginUsername.toLowerCase() !== agent.agent_handle.toLowerCase()) {
+    console.log(`[verify-owner] Syncing updated handle: ${agent.agent_handle} → ${loginUsername} for agent ${agentId}`);
+  }
+  if (loginUsername || loginName) {
+    const newName = loginName || null;
+    const newHandle = loginUsername || null;
+    await c.env.DB.prepare(
+      `UPDATE agents SET agent_name=COALESCE(NULLIF(?,''),agent_name), agent_handle=COALESCE(NULLIF(?,''),agent_handle) WHERE id=?`
+    ).bind(newName, newHandle, agentId).run();
+  }
+
   // Issue session token on successful OAuth verification
   const sessionToken = await issueSession(c.env, agentId);
-  return c.json({ ok: true, username, agentHandle, sessionToken });
+  return c.json({ ok: true, username: loginUsername, agentHandle: loginUsername || agent.agent_handle, sessionToken });
 });
 
 app.post('/api/agent/verify-secret', async (c) => {
