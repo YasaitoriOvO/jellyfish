@@ -329,8 +329,9 @@ import Layout from "../layouts/Layout.astro";
   <!-- ── Hero ─────────────────────────────────────────────────────────── -->
   <div class="hero">
     <div class="hero-badge">
-      🪼 <span class="lang-zh"> AI Twitter Agent 平台</span><span
-        class="lang-en">Open-Source AI Twitter Agent Platform</span>
+      🪼 <span class="lang-zh">开源 AI Twitter Agent 平台</span><span
+        class="lang-en">Open-Source AI Twitter Agent Platform</span
+      >
     </div>
 
     <h2 class="text-gradient">
@@ -394,13 +395,15 @@ import Layout from "../layouts/Layout.astro";
     </div>
     <h2 class="section-title">
       <span class="lang-zh">一切你需要的，开箱即得</span><span class="lang-en"
-        >Everything you need, out of the box</span>
+        >Everything you need, out of the box</span
+      >
     </h2>
     <p class="section-sub">
       <span class="lang-zh"
         >无需自建服务器，运行在 Cloudflare Workers 全球边缘节点上。</span
       ><span class="lang-en"
-        >No servers to manage. Runs on Cloudflare Workers' global edge network.</span>
+        >No servers to manage. Runs on Cloudflare Workers' global edge network.</span
+      >
     </p>
 
     <div class="feature-grid">
@@ -408,42 +411,48 @@ import Layout from "../layouts/Layout.astro";
         <span class="feature-icon">🤖</span>
         <h3>
           <span class="lang-zh">自动回复 @提及</span><span class="lang-en"
-            >Auto-Reply Mentions</span>
+            >Auto-Reply Mentions</span
+          >
         </h3>
         <p>
           <span class="lang-zh"
             >每分钟轮询 @提及，由 Gemini LLM 生成符合人格的自然语言回复。</span
           ><span class="lang-en"
             >Polls @mentions every minute and generates persona-consistent
-            replies powered by Gemini LLM.</span>
+            replies powered by Gemini LLM.</span
+          >
         </p>
       </div>
       <div class="feature-card">
         <span class="feature-icon">👀</span>
         <h3>
           <span class="lang-zh">时间线互动</span><span class="lang-en"
-            >Timeline Engagement</span>
+            >Timeline Engagement</span
+          >
         </h3>
         <p>
           <span class="lang-zh"
             >按配置概率自动扫描时间线，对 VIP 用户的推文点赞或回复。</span
           ><span class="lang-en"
             >Scans the timeline hourly and likes/replies to VIP user tweets at
-            configurable probabilities.</span>
+            configurable probabilities.</span
+          >
         </p>
       </div>
       <div class="feature-card">
         <span class="feature-icon">💬</span>
         <h3>
           <span class="lang-zh">自发推文</span><span class="lang-en"
-            >Spontaneous Tweets</span>
+            >Spontaneous Tweets</span
+          >
         </h3>
         <p>
           <span class="lang-zh"
             >每天定时根据人格自主发布推文，可设置冷却周期避免频发。</span
           ><span class="lang-en"
             >Autonomously posts daily tweets aligned with its persona, with
-            configurable cooldown periods.</span>
+            configurable cooldown periods.</span
+          >
         </p>
       </div>
       <div class="feature-card">
@@ -459,7 +468,8 @@ import Layout from "../layouts/Layout.astro";
             >记录白名单用户的互动历史，让 Agent 形成真实的「认识你」感。</span
           ><span class="lang-en"
             >Records interaction history from whitelisted users, giving the
-            Agent a genuine "remembering you" feel.</span>
+            Agent a genuine "remembering you" feel.</span
+          >
         </p>
       </div>
       <div class="feature-card">
@@ -475,49 +485,56 @@ import Layout from "../layouts/Layout.astro";
             >每日凌晨自动吸收记忆，用 LLM 重塑 system prompt，让人格持续成长。</span
           ><span class="lang-en"
             >Absorbs memories nightly and rewrites the system prompt so the
-            persona continuously evolves.</span>
+            persona continuously evolves.</span
+          >
         </p>
       </div>
       <div class="feature-card">
         <span class="feature-icon">🎭</span>
         <h3>
           <span class="lang-zh">人格蒸馏</span><span class="lang-en"
-            >Persona Distillation</span>
+            >Persona Distillation</span
+          >
         </h3>
         <p>
           <span class="lang-zh"
             >一键抓取任意账号的历史推文，由 LLM 提炼出高度凝练的人格 Prompt。</span
           ><span class="lang-en"
             >Fetches historical tweets from any account and distills them into a
-            highly condensed persona prompt.</span>
+            highly condensed persona prompt.</span
+          >
         </p>
       </div>
       <div class="feature-card">
         <span class="feature-icon">🔐</span>
         <h3>
           <span class="lang-zh">OAuth 2.0 安全授权</span><span class="lang-en"
-            >OAuth 2.0 Auth</span>
+            >OAuth 2.0 Auth</span
+          >
         </h3>
         <p>
           <span class="lang-zh"
             >完整 OAuth PKCE 流程，Refresh Token 加密存储，无需明文密码。</span
           ><span class="lang-en"
             >Full OAuth PKCE flow. Refresh tokens encrypted at rest. No
-            plaintext credentials.</span>
+            plaintext credentials.</span
+          >
         </p>
       </div>
       <div class="feature-card">
         <span class="feature-icon">⚡</span>
         <h3>
           <span class="lang-zh">零运维部署</span><span class="lang-en"
-            >Zero-Ops Deployment</span>
+            >Zero-Ops Deployment</span
+          >
         </h3>
         <p>
           <span class="lang-zh"
             >基于 Cloudflare Workers + D1 + KV，全球低延迟，无需服务器维护。</span
           ><span class="lang-en"
             >Built on Cloudflare Workers + D1 + KV. Global low latency. No
-            server maintenance ever.</span>
+            server maintenance ever.</span
+          >
         </p>
       </div>
     </div>
@@ -527,69 +544,80 @@ import Layout from "../layouts/Layout.astro";
   <div class="section">
     <div class="section-label">
       <span class="lang-zh">使用流程</span><span class="lang-en"
-        >How It Works</span>
+        >How It Works</span
+      >
     </div>
     <h2 class="section-title">
       <span class="lang-zh">四步，让 Agent 上线</span><span class="lang-en"
-        >Four steps to go live</span>
+        >Four steps to go live</span
+      >
     </h2>
     <p class="section-sub">
       <span class="lang-zh">整个流程在浏览器内完成，无需任何本地环境配置。</span
       ><span class="lang-en"
-        >The entire process happens in the browser. No local setup required.</span>
+        >The entire process happens in the browser. No local setup required.</span
+      >
     </p>
 
     <div class="steps-list">
       <div class="step-card">
         <h3>
           🔐 <span class="lang-zh">X 账号授权</span><span class="lang-en"
-            >Authorize X Account</span>
+            >Authorize X Account</span
+          >
         </h3>
         <p>
           <span class="lang-zh"
             >通过 OAuth 授权你想运行为 Agent 的 X 账号，获取 Refresh Token。</span
           ><span class="lang-en"
             >Authorize the X account you want to run as an Agent via OAuth to
-            obtain a Refresh Token.</span>
+            obtain a Refresh Token.</span
+          >
         </p>
       </div>
       <div class="step-card">
         <h3>
           🧪 <span class="lang-zh">人格蒸馏</span><span class="lang-en"
-            >Distill Persona</span>
+            >Distill Persona</span
+          >
         </h3>
         <p>
           <span class="lang-zh"
             >输入源账号，系统自动抓取推文并用 LLM 提炼出 System Prompt。</span
           ><span class="lang-en"
             >Enter source accounts. The system fetches tweets and uses LLM to
-            craft a System Prompt.</span>
+            craft a System Prompt.</span
+          >
         </p>
       </div>
       <div class="step-card">
         <h3>
           ⚙️ <span class="lang-zh">配置参数</span><span class="lang-en"
-            >Configure Parameters</span>
+            >Configure Parameters</span
+          >
         </h3>
         <p>
           <span class="lang-zh"
             >调整回复概率、点赞概率、记忆白名单等运行参数。</span
           ><span class="lang-en"
             >Tune reply probability, like probability, memory whitelist and
-            other runtime parameters.</span>
+            other runtime parameters.</span
+          >
         </p>
       </div>
       <div class="step-card">
         <h3>
           🚀 <span class="lang-zh">一键部署</span><span class="lang-en"
-            >Deploy in One Click</span>
+            >Deploy in One Click</span
+          >
         </h3>
         <p>
           <span class="lang-zh"
             >点击投放水母，Agent 写入数据库并立即开始自动巡逻。</span
           ><span class="lang-en"
             >Click Deploy Jellyfish. Your Agent is written to the database and
-            starts patrolling immediately.</span>
+            starts patrolling immediately.</span
+          >
         </p>
       </div>
     </div>
@@ -599,14 +627,16 @@ import Layout from "../layouts/Layout.astro";
   <div class="cta-banner">
     <h2>
       <span class="lang-zh">准备好了吗？</span><span class="lang-en"
-        >Ready to dive in?</span>
+        >Ready to dive in?</span
+      >
     </h2>
     <p>
       <span class="lang-zh"
         >免费部署，Pro 功能按需解锁。全程浏览器内完成，30 分钟上线。</span
       ><span class="lang-en"
         >Free to deploy. Pro features unlocked on demand. Ship in 30 minutes
-        from your browser.</span>
+        from your browser.</span
+      >
     </p>
     <a
       href="/wizard"

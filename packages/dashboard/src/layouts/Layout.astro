@@ -51,7 +51,13 @@ const { title } = Astro.props;
             document.dispatchEvent(new Event('lang-changed'));
           }
         };
-        if (saved === 'en') setLang('en');
+        // Priority: localStorage > browser language > default zh
+        if (saved) {
+          setLang(saved);
+        } else {
+          var browserLang = (navigator.language || navigator.userLanguage || 'zh').toLowerCase();
+          setLang(browserLang.startsWith('zh') ? 'zh' : 'en');
+        }
         btn.addEventListener('click', function() {
           setLang(document.body.classList.contains('en-mode') ? 'zh' : 'en');
         });
