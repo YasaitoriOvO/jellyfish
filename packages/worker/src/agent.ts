@@ -215,6 +215,23 @@ async function processMention(
     return true;
   }
 
+  // ── Layer 3: Prevent replying to side-thread mentions ───────────────────────
+  // If the agent has already replied in this conversation AND the direct parent
+  // of this mention is NOT the agent's own tweet, then someone mentioned the
+  // agent in a comment branch that the agent was never part of (e.g. user B
+  // commenting under user A's post after the agent already replied to user A).
+  // In this case we silently skip to avoid intruding on unrelated sub-threads.
+  if (agentReplyCount >= 1) {
+    // thread is ordered oldest→newest; the direct parent of the mention is
+    // thread[thread.length - 2] (second-to-last, since last IS the mention itself).
+    const directParent = thread.length >= 2 ? thread[thread.length - 2] : null;
+    const parentIsAgent = directParent?.author_id === ownUserId;
+    if (!parentIsAgent) {
+      console.log(`[agent ${agent.id}] Skipping mention ${mention.id} — agent has already replied in this conversation but the direct parent (${directParent?.id ?? 'none'}) is not the agent's own tweet (side-thread prevention)`);
+      return true;
+    }
+  }
+
   const last = conversation[conversation.length - 1];
   if (!last || last.role !== 'user') {
     const mediaNote = describeMedia(mention, mediaMap) ?? undefined;
