@@ -15,18 +15,18 @@ import Layout from "../layouts/Layout.astro";
       gap: 6px;
       padding: 4px 14px;
       border-radius: 999px;
-      border: 1px solid rgba(193,147,155,0.35);
-      background: rgba(193,147,155,0.08);
-      font-size: .8rem;
+      border: 1px solid rgba(193, 147, 155, 0.35);
+      background: rgba(193, 147, 155, 0.08);
+      font-size: 0.8rem;
       color: var(--primary);
       margin-bottom: 20px;
-      letter-spacing: .03em;
+      letter-spacing: 0.03em;
     }
     .hero h2 {
       font-size: clamp(2rem, 5vw, 3.2rem);
       font-weight: 800;
       line-height: 1.15;
-      letter-spacing: -.02em;
+      letter-spacing: -0.02em;
       margin: 0 0 16px;
     }
     .hero p.sub {
@@ -57,10 +57,13 @@ import Layout from "../layouts/Layout.astro";
       border: none;
       cursor: pointer;
       font-family: inherit;
-      box-shadow: 0 4px 24px rgba(193,147,155,0.4);
-      transition: all .2s;
+      box-shadow: 0 4px 24px rgba(193, 147, 155, 0.4);
+      transition: all 0.2s;
     }
-    .btn-hero-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(193,147,155,0.5); }
+    .btn-hero-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 32px rgba(193, 147, 155, 0.5);
+    }
     .btn-hero-ghost {
       display: inline-flex;
       align-items: center;
@@ -76,9 +79,13 @@ import Layout from "../layouts/Layout.astro";
       border: 1px solid var(--card-border);
       cursor: pointer;
       font-family: inherit;
-      transition: all .2s;
+      transition: all 0.2s;
     }
-    .btn-hero-ghost:hover { background: rgba(255,255,255,0.05); color: var(--text); border-color: rgba(255,255,255,0.2); }
+    .btn-hero-ghost:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--text);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
 
     /* ── Dashboard quick-login ──────────────────────────────── */
     .quick-login {
@@ -97,47 +104,58 @@ import Layout from "../layouts/Layout.astro";
       left: 12px;
       top: 50%;
       transform: translateY(-50%);
-      opacity: .4;
+      opacity: 0.4;
       pointer-events: none;
     }
     .quick-login input {
       width: 100%;
-      background: rgba(255,255,255,0.06);
+      background: rgba(255, 255, 255, 0.06);
       border: 1px solid var(--card-border);
       color: var(--text);
       padding: 10px 12px 10px 34px;
       border-radius: 12px;
-      font-size: .9rem;
+      font-size: 0.9rem;
       font-family: inherit;
-      transition: border-color .2s;
+      transition: border-color 0.2s;
       height: 44px;
     }
-    .quick-login input:focus { outline: none; border-color: var(--primary); }
+    .quick-login input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
     .quick-login button {
       height: 44px;
       padding: 0 18px;
       border-radius: 12px;
-      background: rgba(193,147,155,0.18);
-      border: 1px solid rgba(193,147,155,0.35);
+      background: rgba(193, 147, 155, 0.18);
+      border: 1px solid rgba(193, 147, 155, 0.35);
       color: var(--primary);
       font-weight: 600;
-      font-size: .9rem;
+      font-size: 0.9rem;
       font-family: inherit;
       cursor: pointer;
       white-space: nowrap;
-      transition: all .2s;
+      transition: all 0.2s;
     }
-    .quick-login button:hover { background: rgba(193,147,155,0.28); }
-    .quick-login-err { font-size: .78rem; color: var(--error); margin-top: 6px; text-align: center; display: none; }
+    .quick-login button:hover {
+      background: rgba(193, 147, 155, 0.28);
+    }
+    .quick-login-err {
+      font-size: 0.78rem;
+      color: var(--error);
+      margin-top: 6px;
+      text-align: center;
+      display: none;
+    }
 
     /* ── Section titles ─────────────────────────────────────── */
     .section {
       margin-top: 64px;
     }
     .section-label {
-      font-size: .72rem;
+      font-size: 0.72rem;
       font-weight: 700;
-      letter-spacing: .12em;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
       color: var(--primary);
       margin-bottom: 10px;
@@ -145,12 +163,12 @@ import Layout from "../layouts/Layout.astro";
     .section-title {
       font-size: clamp(1.5rem, 3vw, 2rem);
       font-weight: 700;
-      letter-spacing: -.01em;
+      letter-spacing: -0.01em;
       margin: 0 0 8px;
     }
     .section-sub {
       color: var(--text-muted);
-      font-size: .95rem;
+      font-size: 0.95rem;
       margin-bottom: 32px;
     }
 
@@ -166,36 +184,41 @@ import Layout from "../layouts/Layout.astro";
       border-radius: 18px;
       padding: 22px 20px;
       backdrop-filter: blur(12px);
-      transition: border-color .2s, transform .2s;
+      transition:
+        border-color 0.2s,
+        transform 0.2s;
     }
-    .feature-card:hover { border-color: rgba(193,147,155,0.4); transform: translateY(-2px); }
+    .feature-card:hover {
+      border-color: rgba(193, 147, 155, 0.4);
+      transform: translateY(-2px);
+    }
     .feature-icon {
       font-size: 1.8rem;
       margin-bottom: 12px;
       display: block;
     }
     .feature-card h3 {
-      font-size: .95rem;
+      font-size: 0.95rem;
       font-weight: 700;
       margin: 0 0 6px;
     }
     .feature-card p {
-      font-size: .82rem;
+      font-size: 0.82rem;
       color: var(--text-muted);
       line-height: 1.55;
       margin: 0;
     }
     .pro-badge {
       display: inline-block;
-      font-size: .65rem;
+      font-size: 0.65rem;
       font-weight: 700;
       padding: 1px 6px;
       border-radius: 4px;
-      background: rgba(139,92,246,0.2);
+      background: rgba(139, 92, 246, 0.2);
       color: #a78bfa;
       margin-left: 5px;
       vertical-align: middle;
-      letter-spacing: .03em;
+      letter-spacing: 0.03em;
     }
 
     /* ── How it works ───────────────────────────────────────── */
@@ -221,24 +244,44 @@ import Layout from "../layouts/Layout.astro";
       right: 18px;
       font-size: 2.4rem;
       font-weight: 900;
-      color: rgba(193,147,155,0.12);
+      color: rgba(193, 147, 155, 0.12);
       line-height: 1;
       font-variant-numeric: tabular-nums;
     }
-    .step-card h3 { font-size: .95rem; font-weight: 700; margin: 0 0 6px; }
-    .step-card p { font-size: .82rem; color: var(--text-muted); line-height: 1.55; margin: 0; }
+    .step-card h3 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin: 0 0 6px;
+    }
+    .step-card p {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+      margin: 0;
+    }
 
     /* ── CTA Banner ─────────────────────────────────────────── */
     .cta-banner {
       margin-top: 64px;
-      background: linear-gradient(135deg, rgba(193,147,155,0.18), rgba(235,181,178,0.1));
-      border: 1px solid rgba(193,147,155,0.3);
+      background: linear-gradient(
+        135deg,
+        rgba(193, 147, 155, 0.18),
+        rgba(235, 181, 178, 0.1)
+      );
+      border: 1px solid rgba(193, 147, 155, 0.3);
       border-radius: 24px;
       padding: 48px 32px;
       text-align: center;
     }
-    .cta-banner h2 { font-size: 1.8rem; font-weight: 800; margin: 0 0 12px; }
-    .cta-banner p { color: var(--text-muted); margin: 0 0 28px; }
+    .cta-banner h2 {
+      font-size: 1.8rem;
+      font-weight: 800;
+      margin: 0 0 12px;
+    }
+    .cta-banner p {
+      color: var(--text-muted);
+      margin: 0 0 28px;
+    }
 
     /* ── Footer ─────────────────────────────────────────────── */
     .footer {
@@ -250,39 +293,71 @@ import Layout from "../layouts/Layout.astro";
       align-items: center;
       flex-wrap: wrap;
       gap: 12px;
-      font-size: .8rem;
+      font-size: 0.8rem;
       color: var(--text-muted);
     }
-    .footer a { color: var(--text-muted); text-decoration: none; transition: color .15s; }
-    .footer a:hover { color: var(--text); }
+    .footer a {
+      color: var(--text-muted);
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    .footer a:hover {
+      color: var(--text);
+    }
 
     @media (max-width: 520px) {
-      .quick-login { flex-direction: column; }
-      .quick-login button { width: 100%; }
-      .hero-actions { flex-direction: column; align-items: stretch; }
-      .btn-hero-primary, .btn-hero-ghost { justify-content: center; }
-      .cta-banner { padding: 32px 20px; }
+      .quick-login {
+        flex-direction: column;
+      }
+      .quick-login button {
+        width: 100%;
+      }
+      .hero-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .btn-hero-primary,
+      .btn-hero-ghost {
+        justify-content: center;
+      }
+      .cta-banner {
+        padding: 32px 20px;
+      }
     }
   </style>
 
   <!-- ── Hero ─────────────────────────────────────────────────────────── -->
   <div class="hero">
-    <div class="hero-badge">🪼 <span class="lang-zh">开源 AI Twitter Agent 平台</span><span class="lang-en">Open-Source AI Twitter Agent Platform</span></div>
+    <div class="hero-badge">
+      🪼 <span class="lang-zh"> AI Twitter Agent 平台</span><span
+        class="lang-en">Open-Source AI Twitter Agent Platform</span>
+    </div>
 
     <h2 class="text-gradient">
-      <span class="lang-zh">让你的 X 账号<br>拥有自己的灵魂</span>
-      <span class="lang-en">Give Your X Account<br>Its Own Soul</span>
+      <span class="lang-zh">让你的 X 账号<br />拥有自己的灵魂</span>
+      <span class="lang-en">Give Your X Account<br />Its Own Soul</span>
     </h2>
     <p class="sub">
-      <span class="lang-zh">Jellyfish 让任何 X 账号化身永不下线的 AI Agent——自动回复、时间线互动、自发推文、记忆成长，无需服务器运维。</span>
-      <span class="lang-en">Jellyfish turns any X account into an always-online AI Agent — auto-reply, timeline engagement, spontaneous tweets, memory & evolution. No server ops needed.</span>
+      <span class="lang-zh"
+        >Jellyfish 让任何 X 账号化身永不下线的 AI
+        Agent——自动回复、时间线互动、自发推文、记忆成长，无需服务器运维。</span
+      >
+      <span class="lang-en"
+        >Jellyfish turns any X account into an always-online AI Agent —
+        auto-reply, timeline engagement, spontaneous tweets, memory & evolution.
+        No server ops needed.</span
+      >
     </p>
     <div class="hero-actions">
       <a href="/wizard" class="btn-hero-primary">
-        🚀 <span class="lang-zh">立即部署 Agent</span><span class="lang-en">Deploy Your Agent</span>
+        🚀 <span class="lang-zh">立即部署 Agent</span><span class="lang-en"
+          >Deploy Your Agent</span
+        >
       </a>
       <a href="/wizard#distill" id="distillOnlyBtn" class="btn-hero-ghost">
-        🧪 <span class="lang-zh">仅体验人格蒸馏</span><span class="lang-en">Try Persona Distill</span>
+        🧪 <span class="lang-zh">仅体验人格蒸馏</span><span class="lang-en"
+          >Try Persona Distill</span
+        >
       </a>
     </div>
 
@@ -290,108 +365,257 @@ import Layout from "../layouts/Layout.astro";
     <div class="quick-login">
       <div class="quick-login-wrap">
         <span class="quick-login-at">@</span>
-        <input type="text" id="dashboardHandle"
-          data-ph-zh="已有 Agent？输入账号名" data-ph-en="Have an Agent? Enter handle"
-          placeholder="已有 Agent？输入账号名" />
+        <input
+          type="text"
+          id="dashboardHandle"
+          data-ph-zh="已有 Agent？输入账号名"
+          data-ph-en="Have an Agent? Enter handle"
+          placeholder="已有 Agent？输入账号名"
+        />
       </div>
       <button id="gotoDashboardBtn">
-        <span class="lang-zh">进入控制台</span><span class="lang-en">Dashboard</span>
+        <span class="lang-zh">进入控制台</span><span class="lang-en"
+          >Dashboard</span
+        >
       </button>
     </div>
     <div class="quick-login-err" id="dashboardErr">
       <span class="lang-zh" id="dashErrZh">未找到对应 Agent，请先完成部署</span>
-      <span class="lang-en" id="dashErrEn">No Agent found for this handle. Deploy first.</span>
+      <span class="lang-en" id="dashErrEn"
+        >No Agent found for this handle. Deploy first.</span
+      >
     </div>
   </div>
 
   <!-- ── Features ──────────────────────────────────────────────────────── -->
   <div class="section">
-    <div class="section-label"><span class="lang-zh">核心功能</span><span class="lang-en">Features</span></div>
-    <h2 class="section-title"><span class="lang-zh">一切你需要的，开箱即得</span><span class="lang-en">Everything you need, out of the box</span></h2>
-    <p class="section-sub"><span class="lang-zh">无需自建服务器，运行在 Cloudflare Workers 全球边缘节点上。</span><span class="lang-en">No servers to manage. Runs on Cloudflare Workers' global edge network.</span></p>
+    <div class="section-label">
+      <span class="lang-zh">核心功能</span><span class="lang-en">Features</span>
+    </div>
+    <h2 class="section-title">
+      <span class="lang-zh">一切你需要的，开箱即得</span><span class="lang-en"
+        >Everything you need, out of the box</span>
+    </h2>
+    <p class="section-sub">
+      <span class="lang-zh"
+        >无需自建服务器，运行在 Cloudflare Workers 全球边缘节点上。</span
+      ><span class="lang-en"
+        >No servers to manage. Runs on Cloudflare Workers' global edge network.</span>
+    </p>
 
     <div class="feature-grid">
       <div class="feature-card">
         <span class="feature-icon">🤖</span>
-        <h3><span class="lang-zh">自动回复 @提及</span><span class="lang-en">Auto-Reply Mentions</span></h3>
-        <p><span class="lang-zh">每分钟轮询 @提及，由 Gemini LLM 生成符合人格的自然语言回复。</span><span class="lang-en">Polls @mentions every minute and generates persona-consistent replies powered by Gemini LLM.</span></p>
+        <h3>
+          <span class="lang-zh">自动回复 @提及</span><span class="lang-en"
+            >Auto-Reply Mentions</span>
+        </h3>
+        <p>
+          <span class="lang-zh"
+            >每分钟轮询 @提及，由 Gemini LLM 生成符合人格的自然语言回复。</span
+          ><span class="lang-en"
+            >Polls @mentions every minute and generates persona-consistent
+            replies powered by Gemini LLM.</span>
+        </p>
       </div>
       <div class="feature-card">
         <span class="feature-icon">👀</span>
-        <h3><span class="lang-zh">时间线互动</span><span class="lang-en">Timeline Engagement</span></h3>
-        <p><span class="lang-zh">按配置概率自动扫描时间线，对 VIP 用户的推文点赞或回复。</span><span class="lang-en">Scans the timeline hourly and likes/replies to VIP user tweets at configurable probabilities.</span></p>
+        <h3>
+          <span class="lang-zh">时间线互动</span><span class="lang-en"
+            >Timeline Engagement</span>
+        </h3>
+        <p>
+          <span class="lang-zh"
+            >按配置概率自动扫描时间线，对 VIP 用户的推文点赞或回复。</span
+          ><span class="lang-en"
+            >Scans the timeline hourly and likes/replies to VIP user tweets at
+            configurable probabilities.</span>
+        </p>
       </div>
       <div class="feature-card">
         <span class="feature-icon">💬</span>
-        <h3><span class="lang-zh">自发推文</span><span class="lang-en">Spontaneous Tweets</span></h3>
-        <p><span class="lang-zh">每天定时根据人格自主发布推文，可设置冷却周期避免频发。</span><span class="lang-en">Autonomously posts daily tweets aligned with its persona, with configurable cooldown periods.</span></p>
+        <h3>
+          <span class="lang-zh">自发推文</span><span class="lang-en"
+            >Spontaneous Tweets</span>
+        </h3>
+        <p>
+          <span class="lang-zh"
+            >每天定时根据人格自主发布推文，可设置冷却周期避免频发。</span
+          ><span class="lang-en"
+            >Autonomously posts daily tweets aligned with its persona, with
+            configurable cooldown periods.</span>
+        </p>
       </div>
       <div class="feature-card">
         <span class="feature-icon">🧠</span>
         <h3>
-          <span class="lang-zh">互动记忆</span><span class="lang-en">Interaction Memory</span>
+          <span class="lang-zh">互动记忆</span><span class="lang-en"
+            >Interaction Memory</span
+          >
           <span class="pro-badge">Pro</span>
         </h3>
-        <p><span class="lang-zh">记录白名单用户的互动历史，让 Agent 形成真实的「认识你」感。</span><span class="lang-en">Records interaction history from whitelisted users, giving the Agent a genuine "remembering you" feel.</span></p>
+        <p>
+          <span class="lang-zh"
+            >记录白名单用户的互动历史，让 Agent 形成真实的「认识你」感。</span
+          ><span class="lang-en"
+            >Records interaction history from whitelisted users, giving the
+            Agent a genuine "remembering you" feel.</span>
+        </p>
       </div>
       <div class="feature-card">
         <span class="feature-icon">🧬</span>
         <h3>
-          <span class="lang-zh">人格演化</span><span class="lang-en">Personality Evolution</span>
+          <span class="lang-zh">人格演化</span><span class="lang-en"
+            >Personality Evolution</span
+          >
           <span class="pro-badge">Pro</span>
         </h3>
-        <p><span class="lang-zh">每日凌晨自动吸收记忆，用 LLM 重塑 system prompt，让人格持续成长。</span><span class="lang-en">Absorbs memories nightly and rewrites the system prompt so the persona continuously evolves.</span></p>
+        <p>
+          <span class="lang-zh"
+            >每日凌晨自动吸收记忆，用 LLM 重塑 system prompt，让人格持续成长。</span
+          ><span class="lang-en"
+            >Absorbs memories nightly and rewrites the system prompt so the
+            persona continuously evolves.</span>
+        </p>
       </div>
       <div class="feature-card">
         <span class="feature-icon">🎭</span>
-        <h3><span class="lang-zh">人格蒸馏</span><span class="lang-en">Persona Distillation</span></h3>
-        <p><span class="lang-zh">一键抓取任意账号的历史推文，由 LLM 提炼出高度凝练的人格 Prompt。</span><span class="lang-en">Fetches historical tweets from any account and distills them into a highly condensed persona prompt.</span></p>
+        <h3>
+          <span class="lang-zh">人格蒸馏</span><span class="lang-en"
+            >Persona Distillation</span>
+        </h3>
+        <p>
+          <span class="lang-zh"
+            >一键抓取任意账号的历史推文，由 LLM 提炼出高度凝练的人格 Prompt。</span
+          ><span class="lang-en"
+            >Fetches historical tweets from any account and distills them into a
+            highly condensed persona prompt.</span>
+        </p>
       </div>
       <div class="feature-card">
         <span class="feature-icon">🔐</span>
-        <h3><span class="lang-zh">OAuth 2.0 安全授权</span><span class="lang-en">OAuth 2.0 Auth</span></h3>
-        <p><span class="lang-zh">完整 OAuth PKCE 流程，Refresh Token 加密存储，无需明文密码。</span><span class="lang-en">Full OAuth PKCE flow. Refresh tokens encrypted at rest. No plaintext credentials.</span></p>
+        <h3>
+          <span class="lang-zh">OAuth 2.0 安全授权</span><span class="lang-en"
+            >OAuth 2.0 Auth</span>
+        </h3>
+        <p>
+          <span class="lang-zh"
+            >完整 OAuth PKCE 流程，Refresh Token 加密存储，无需明文密码。</span
+          ><span class="lang-en"
+            >Full OAuth PKCE flow. Refresh tokens encrypted at rest. No
+            plaintext credentials.</span>
+        </p>
       </div>
       <div class="feature-card">
         <span class="feature-icon">⚡</span>
-        <h3><span class="lang-zh">零运维部署</span><span class="lang-en">Zero-Ops Deployment</span></h3>
-        <p><span class="lang-zh">基于 Cloudflare Workers + D1 + KV，全球低延迟，无需服务器维护。</span><span class="lang-en">Built on Cloudflare Workers + D1 + KV. Global low latency. No server maintenance ever.</span></p>
+        <h3>
+          <span class="lang-zh">零运维部署</span><span class="lang-en"
+            >Zero-Ops Deployment</span>
+        </h3>
+        <p>
+          <span class="lang-zh"
+            >基于 Cloudflare Workers + D1 + KV，全球低延迟，无需服务器维护。</span
+          ><span class="lang-en"
+            >Built on Cloudflare Workers + D1 + KV. Global low latency. No
+            server maintenance ever.</span>
+        </p>
       </div>
     </div>
   </div>
 
   <!-- ── How it works ──────────────────────────────────────────────────── -->
   <div class="section">
-    <div class="section-label"><span class="lang-zh">使用流程</span><span class="lang-en">How It Works</span></div>
-    <h2 class="section-title"><span class="lang-zh">四步，让 Agent 上线</span><span class="lang-en">Four steps to go live</span></h2>
-    <p class="section-sub"><span class="lang-zh">整个流程在浏览器内完成，无需任何本地环境配置。</span><span class="lang-en">The entire process happens in the browser. No local setup required.</span></p>
+    <div class="section-label">
+      <span class="lang-zh">使用流程</span><span class="lang-en"
+        >How It Works</span>
+    </div>
+    <h2 class="section-title">
+      <span class="lang-zh">四步，让 Agent 上线</span><span class="lang-en"
+        >Four steps to go live</span>
+    </h2>
+    <p class="section-sub">
+      <span class="lang-zh">整个流程在浏览器内完成，无需任何本地环境配置。</span
+      ><span class="lang-en"
+        >The entire process happens in the browser. No local setup required.</span>
+    </p>
 
     <div class="steps-list">
       <div class="step-card">
-        <h3>🔐 <span class="lang-zh">X 账号授权</span><span class="lang-en">Authorize X Account</span></h3>
-        <p><span class="lang-zh">通过 OAuth 授权你想运行为 Agent 的 X 账号，获取 Refresh Token。</span><span class="lang-en">Authorize the X account you want to run as an Agent via OAuth to obtain a Refresh Token.</span></p>
+        <h3>
+          🔐 <span class="lang-zh">X 账号授权</span><span class="lang-en"
+            >Authorize X Account</span>
+        </h3>
+        <p>
+          <span class="lang-zh"
+            >通过 OAuth 授权你想运行为 Agent 的 X 账号，获取 Refresh Token。</span
+          ><span class="lang-en"
+            >Authorize the X account you want to run as an Agent via OAuth to
+            obtain a Refresh Token.</span>
+        </p>
       </div>
       <div class="step-card">
-        <h3>🧪 <span class="lang-zh">人格蒸馏</span><span class="lang-en">Distill Persona</span></h3>
-        <p><span class="lang-zh">输入源账号，系统自动抓取推文并用 LLM 提炼出 System Prompt。</span><span class="lang-en">Enter source accounts. The system fetches tweets and uses LLM to craft a System Prompt.</span></p>
+        <h3>
+          🧪 <span class="lang-zh">人格蒸馏</span><span class="lang-en"
+            >Distill Persona</span>
+        </h3>
+        <p>
+          <span class="lang-zh"
+            >输入源账号，系统自动抓取推文并用 LLM 提炼出 System Prompt。</span
+          ><span class="lang-en"
+            >Enter source accounts. The system fetches tweets and uses LLM to
+            craft a System Prompt.</span>
+        </p>
       </div>
       <div class="step-card">
-        <h3>⚙️ <span class="lang-zh">配置参数</span><span class="lang-en">Configure Parameters</span></h3>
-        <p><span class="lang-zh">调整回复概率、点赞概率、记忆白名单等运行参数。</span><span class="lang-en">Tune reply probability, like probability, memory whitelist and other runtime parameters.</span></p>
+        <h3>
+          ⚙️ <span class="lang-zh">配置参数</span><span class="lang-en"
+            >Configure Parameters</span>
+        </h3>
+        <p>
+          <span class="lang-zh"
+            >调整回复概率、点赞概率、记忆白名单等运行参数。</span
+          ><span class="lang-en"
+            >Tune reply probability, like probability, memory whitelist and
+            other runtime parameters.</span>
+        </p>
       </div>
       <div class="step-card">
-        <h3>🚀 <span class="lang-zh">一键部署</span><span class="lang-en">Deploy in One Click</span></h3>
-        <p><span class="lang-zh">点击投放水母，Agent 写入数据库并立即开始自动巡逻。</span><span class="lang-en">Click Deploy Jellyfish. Your Agent is written to the database and starts patrolling immediately.</span></p>
+        <h3>
+          🚀 <span class="lang-zh">一键部署</span><span class="lang-en"
+            >Deploy in One Click</span>
+        </h3>
+        <p>
+          <span class="lang-zh"
+            >点击投放水母，Agent 写入数据库并立即开始自动巡逻。</span
+          ><span class="lang-en"
+            >Click Deploy Jellyfish. Your Agent is written to the database and
+            starts patrolling immediately.</span>
+        </p>
       </div>
     </div>
   </div>
 
   <!-- ── CTA ───────────────────────────────────────────────────────────── -->
   <div class="cta-banner">
-    <h2><span class="lang-zh">准备好了吗？</span><span class="lang-en">Ready to dive in?</span></h2>
-    <p><span class="lang-zh">免费部署，Pro 功能按需解锁。全程浏览器内完成，30 分钟上线。</span><span class="lang-en">Free to deploy. Pro features unlocked on demand. Ship in 30 minutes from your browser.</span></p>
-    <a href="/wizard" class="btn-hero-primary" style="margin: 0 auto; display:inline-flex;">
-      🪼 <span class="lang-zh">现在就部署我的 Agent</span><span class="lang-en">Deploy My Agent Now</span>
+    <h2>
+      <span class="lang-zh">准备好了吗？</span><span class="lang-en"
+        >Ready to dive in?</span>
+    </h2>
+    <p>
+      <span class="lang-zh"
+        >免费部署，Pro 功能按需解锁。全程浏览器内完成，30 分钟上线。</span
+      ><span class="lang-en"
+        >Free to deploy. Pro features unlocked on demand. Ship in 30 minutes
+        from your browser.</span>
+    </p>
+    <a
+      href="/wizard"
+      class="btn-hero-primary"
+      style="margin: 0 auto; display:inline-flex;"
+    >
+      🪼 <span class="lang-zh">现在就部署我的 Agent</span><span class="lang-en"
+        >Deploy My Agent Now</span
+      >
     </a>
   </div>
 
@@ -399,8 +623,16 @@ import Layout from "../layouts/Layout.astro";
   <div class="footer">
     <span>© 2025 Jellyfish: Another Agent</span>
     <div style="display:flex;gap:20px;">
-      <a href="/wizard"><span class="lang-zh">创建 Agent</span><span class="lang-en">Create Agent</span></a>
-      <a href="/dashboard"><span class="lang-zh">控制台</span><span class="lang-en">Dashboard</span></a>
+      <a href="/wizard"
+        ><span class="lang-zh">创建 Agent</span><span class="lang-en"
+          >Create Agent</span
+        ></a
+      >
+      <a href="/dashboard"
+        ><span class="lang-zh">控制台</span><span class="lang-en"
+          >Dashboard</span
+        ></a
+      >
     </div>
   </div>
 
@@ -409,34 +641,44 @@ import Layout from "../layouts/Layout.astro";
 
     // ── Dashboard quick login ──────────────────────────────────────────────
     async function goDashboard() {
-      const handle = ($('dashboardHandle').value || '').trim().replace(/^@/, '');
-      const errEl = $('dashboardErr');
-      const zhEl = $('dashErrZh');
-      const enEl = $('dashErrEn');
-      const btn = $('gotoDashboardBtn');
-      const isEn = document.body.classList.contains('en-mode');
+      const handle = ($("dashboardHandle").value || "")
+        .trim()
+        .replace(/^@/, "");
+      const errEl = $("dashboardErr");
+      const zhEl = $("dashErrZh");
+      const enEl = $("dashErrEn");
+      const btn = $("gotoDashboardBtn");
+      const isEn = document.body.classList.contains("en-mode");
       if (!handle) {
-        if (zhEl) zhEl.textContent = '请输入 X 账号名';
-        if (enEl) enEl.textContent = 'Please enter an X username';
-        errEl.style.display = 'block'; return;
+        if (zhEl) zhEl.textContent = "请输入 X 账号名";
+        if (enEl) enEl.textContent = "Please enter an X username";
+        errEl.style.display = "block";
+        return;
       }
-      errEl.style.display = 'none';
+      errEl.style.display = "none";
       btn.disabled = true;
-      btn.innerHTML = isEn ? '⏳ Looking up...' : '⏳ 查找中...';
+      btn.innerHTML = isEn ? "⏳ Looking up..." : "⏳ 查找中...";
       try {
-        const res = await fetch('/api/agent/find-by-handle?handle=' + encodeURIComponent(handle));
+        const res = await fetch(
+          "/api/agent/find-by-handle?handle=" + encodeURIComponent(handle),
+        );
         const d = await res.json();
         if (d.agentId) {
-          window.location.href = '/dashboard?id=' + encodeURIComponent(d.agentId);
+          window.location.href =
+            "/dashboard?id=" + encodeURIComponent(d.agentId);
         } else {
-          if (zhEl) zhEl.textContent = '未找到 @' + handle + ' 对应的 Agent，请先完成部署';
-          if (enEl) enEl.textContent = 'No Agent found for @' + handle + '. Please deploy first.';
-          errEl.style.display = 'block';
+          if (zhEl)
+            zhEl.textContent =
+              "未找到 @" + handle + " 对应的 Agent，请先完成部署";
+          if (enEl)
+            enEl.textContent =
+              "No Agent found for @" + handle + ". Please deploy first.";
+          errEl.style.display = "block";
         }
-      } catch(e) {
-        if (zhEl) zhEl.textContent = '查找失败: ' + e.message;
-        if (enEl) enEl.textContent = 'Lookup failed: ' + e.message;
-        errEl.style.display = 'block';
+      } catch (e) {
+        if (zhEl) zhEl.textContent = "查找失败: " + e.message;
+        if (enEl) enEl.textContent = "Lookup failed: " + e.message;
+        errEl.style.display = "block";
       } finally {
         btn.disabled = false;
         btn.innerHTML = isEn
@@ -445,32 +687,38 @@ import Layout from "../layouts/Layout.astro";
       }
     }
 
-    $('gotoDashboardBtn').addEventListener('click', goDashboard);
-    $('dashboardHandle').addEventListener('keydown', (e) => { if (e.key === 'Enter') goDashboard(); });
+    $("gotoDashboardBtn").addEventListener("click", goDashboard);
+    $("dashboardHandle").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") goDashboard();
+    });
 
     // ── Distill-only shortcut: /wizard with hash triggers mode=distill ───
-    $('distillOnlyBtn').addEventListener('click', (e) => {
+    $("distillOnlyBtn").addEventListener("click", (e) => {
       e.preventDefault();
-      window.location.href = '/wizard?mode=distill';
+      window.location.href = "/wizard?mode=distill";
     });
 
     // ── Language sync for dynamic elements ────────────────────────────────
-    document.addEventListener('lang-changed', function() {
-      const isEn = document.body.classList.contains('en-mode');
-      document.querySelectorAll('input[data-ph-zh]').forEach(el => {
-        el.placeholder = isEn ? el.getAttribute('data-ph-en') : el.getAttribute('data-ph-zh');
+    document.addEventListener("lang-changed", function () {
+      const isEn = document.body.classList.contains("en-mode");
+      document.querySelectorAll("input[data-ph-zh]").forEach((el) => {
+        el.placeholder = isEn
+          ? el.getAttribute("data-ph-en")
+          : el.getAttribute("data-ph-zh");
       });
     });
-    document.dispatchEvent(new Event('lang-changed'));
+    document.dispatchEvent(new Event("lang-changed"));
   </script>
 
-  <script is:inline src='https://storage.ko-fi.com/cdn/scripts/overlay-widget.js'></script>
+  <script
+    is:inline
+    src="https://storage.ko-fi.com/cdn/scripts/overlay-widget.js"></script>
   <script is:inline>
-    kofiWidgetOverlay.draw('carolynsun', {
-      'type': 'floating-chat',
-      'floating-chat.donateButton.text': 'Support me',
-      'floating-chat.donateButton.background-color': '#323842',
-      'floating-chat.donateButton.text-color': '#fff'
+    kofiWidgetOverlay.draw("carolynsun", {
+      type: "floating-chat",
+      "floating-chat.donateButton.text": "Support me",
+      "floating-chat.donateButton.background-color": "#323842",
+      "floating-chat.donateButton.text-color": "#fff",
     });
   </script>
 </Layout>
