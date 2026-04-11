@@ -105,9 +105,8 @@ function buildTimelineOverride(agent: AgentDbRecord, vip: VipEntry | undefined, 
   return `\n\n[⭐ VIP Timeline | @${vip.username} | ${personaLabel}]\nAttention! The person who posted this is one of your priority contacts! Interact in "${personaLabel}" mode. Reply + like probability raised to ${replyPct}%. Slightly relaxed word limit.`;
 }
 
-// ─── Build Gemini content array from conversation thread ──────────────────────
 function buildContents(thread: ConversationTurn[], ownUserId: string): GeminiContent[] {
-  return thread.map((turn): GeminiContent => {
+  const raw = thread.map((turn): GeminiContent => {
     let text: string;
 
     if (turn.role !== 'agent') {
@@ -125,6 +124,19 @@ function buildContents(thread: ConversationTurn[], ownUserId: string): GeminiCon
       parts: [{ text }],
     };
   });
+
+  // Collapse consecutive turns of the same role (Gemini requires strictly alternating user/model roles)
+  const collapsed: GeminiContent[] = [];
+  for (const item of raw) {
+    const last = collapsed[collapsed.length - 1];
+    if (last && last.role === item.role) {
+      last.parts[0].text += `\n\n${item.parts[0].text}`;
+    } else {
+      collapsed.push(item);
+    }
+  }
+  
+  return collapsed;
 }
 
 // ─── Generate a reply to a mention ────────────────────────────────────────────
