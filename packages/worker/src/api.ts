@@ -83,6 +83,49 @@ app.get('/api/cron', async (c) => {
   return c.text('Cron executed via HTTP trigger');
 });
 
+// ── Deploy Passcode Gate ────────────────────────────────────────────────────
+// Protects the agent creation flow — requires author-issued passcode.
+// Set the secret via: npx wrangler secret put DEPLOY_PASSCODE
+app.post('/api/auth/deploy-passcode', async (c) => {
+  const { passcode } = await c.req.json() as any;
+  if (!passcode) return c.json({ ok: false, error: 'Missing passcode' }, 400);
+
+  const stored = c.env.DEPLOY_PASSCODE;
+  if (!stored) {
+    // No secret configured — deny all (safe default)
+    return c.json({ ok: false, error: 'Deploy access is not configured on this server.' }, 403);
+  }
+
+  // Brute-force rate limiting
+  const failKey = 'deploy_passcode_fail:' + c.req.header('CF-Connecting-IP') || 'unknown';
+  const failRaw = await c.env.AGENT_STATE.get(failKey);
+  const fails = failRaw ? parseInt(failRaw) : 0;
+  if (fails >= 5) return c.json({ ok: false, error: 'Too many failed attempts. Please try again in 15 minutes.' }, 429);
+
+  // Constant-time comparison
+  const enc = new TextEncoder();
+  const a = enc.encode(stored);
+  const b = enc.encode(passcode);
+  const maxLen = Math.max(a.length, b.length);
+  const aPad = new Uint8Array(maxLen); aPad.set(a);
+  const bPad = new Uint8Array(maxLen); bPad.set(b);
+  let diff = a.length ^ b.length;
+  for (let i = 0; i < maxLen; i++) diff |= (aPad[i] ?? 0) ^ (bPad[i] ?? 0);
+  const ok = diff === 0;
+
+  if (!ok) {
+    await c.env.AGENT_STATE.put(failKey, String(fails + 1), { expirationTtl: 15 * 60 });
+    return c.json({ ok: false, error: 'Incorrect passcode' });
+  }
+
+  await c.env.AGENT_STATE.delete(failKey);
+  // Issue a deploy token valid for 2 hours
+  const deployToken = crypto.randomUUID();
+  await c.env.AGENT_STATE.put(`deploy_token:${deployToken}`, '1', { expirationTtl: 2 * 60 * 60 });
+  return c.json({ ok: true, deployToken });
+});
+
+
 // ── OAuth ──────────────────────────────────────────────────────────────────
 app.post('/api/oauth/start', async (c) => {
   const sessionId = crypto.randomUUID();
@@ -443,6 +486,15 @@ app.get('/api/models', async (c) => {
 app.post('/api/agent/create', async (c) => {
   try {
     const reqJson = await c.req.json() as any;
+
+    // Verify deploy token when DEPLOY_PASSCODE is configured
+    if (c.env.DEPLOY_PASSCODE) {
+      const deployToken = reqJson.deployToken as string | undefined;
+      if (!deployToken) return c.json({ error: '需要部署授权码 / Deploy passcode required' }, 403);
+      const valid = await c.env.AGENT_STATE.get(`deploy_token:${deployToken}`);
+      if (!valid) return c.json({ error: '部署授权码无效或已过期 / Invalid or expired deploy token' }, 403);
+    }
+
     const config = reqJson.config;
     const skill = reqJson.skill;
     const refreshToken = reqJson.refreshToken;

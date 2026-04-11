@@ -20,19 +20,53 @@ import Layout from "../layouts/Layout.astro";
       <button
         class="btn btn-primary"
         id="modeCreateBtn"
-        style="padding: 24px; font-size: 1.1rem; height: auto;"
+        style="padding: 24px; font-size: 1.1rem; height: auto; opacity: 0.45; cursor: not-allowed; position: relative;"
+        disabled
         ><span class="lang-zh block-lang"
           >🤖 创建并部署全功能 Agent<br /><span
             style="font-size:0.8rem; opacity:0.8; font-weight:normal; margin-top:8px; display:block;"
             >完整定型、配置概率并激活后台巡逻进程</span
           ></span
         ><span class="lang-en block-lang"
-          >🤖 Create & Deploy Agent<br /><span
+          >🤖 Create &amp; Deploy Agent<br /><span
             style="font-size:0.8rem; opacity:0.8; font-weight:normal; margin-top:8px; display:block;"
             >Deploy active agent to background daemon</span
           ></span
         ></button
       >
+
+      <!-- Deploy Passcode Gate -->
+      <div id="deployGate" style="background:rgba(193,147,155,0.08); border:1px solid rgba(193,147,155,0.25); border-radius:12px; padding:16px; margin-top:-8px;">
+        <div style="display:flex; align-items:flex-start; gap:10px; margin-bottom:12px;">
+          <span style="font-size:1.2rem;">🔑</span>
+          <div>
+            <div style="font-size:0.9rem; font-weight:600; color:var(--primary); margin-bottom:4px;">
+              <span class="lang-zh">需要授权码才能部署</span><span class="lang-en">Passcode Required to Deploy</span>
+            </div>
+            <div style="font-size:0.8rem; color:var(--text-muted); line-height:1.6;">
+              <span class="lang-zh">由于 X (Twitter) API 与 LLM API 费用较贵，Agent 部署需联系作者付费获取授权码后方可使用。<br>请通过 <a href="https://ko-fi.com/carolynsun" target="_blank" rel="noopener" style="color:var(--primary)">Ko-fi</a> 赞助支持，获取授权码后填入下方。</span>
+              <span class="lang-en">Because X (Twitter) API and LLM API costs are significant, deploying an Agent requires a passcode obtained after supporting the author.<br>Please support via <a href="https://ko-fi.com/carolynsun" target="_blank" rel="noopener" style="color:var(--primary)">Ko-fi</a>, then enter your passcode below.</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <input
+            type="password"
+            id="deployPasscode"
+            style="flex:1; margin-top:0;"
+            data-ph-zh="输入授权码"
+            data-ph-en="Enter passcode"
+            placeholder="输入授权码"
+          />
+          <button class="btn btn-primary" id="deployPasscodeBtn" style="margin-top:0; white-space:nowrap;">
+            <span class="lang-zh">✓ 验证</span><span class="lang-en">✓ Verify</span>
+          </button>
+        </div>
+        <div id="deployGateErr" style="font-size:0.8rem; color:var(--error); margin-top:8px; display:none;"></div>
+        <div id="deployGateOk" style="font-size:0.8rem; color:#86efac; margin-top:8px; display:none;">
+          <span class="lang-zh">✅ 授权成功！可以开始部署了。</span><span class="lang-en">✅ Access granted! You can now deploy.</span>
+        </div>
+      </div>
       <button
         class="btn btn-ghost"
         id="modeDistillBtn"
@@ -601,6 +635,7 @@ import Layout from "../layouts/Layout.astro";
       likePct: 0.8,
       cooldown: 3,
       enableEvo: true,
+      deployToken: "",
     };
 
     const STEPS_CREATE = [
@@ -715,6 +750,57 @@ import Layout from "../layouts/Layout.astro";
       }
       return true;
     }
+
+    // Restore deploy token from sessionStorage (persists within tab session)
+    (function () {
+      const savedToken = sessionStorage.getItem('deployToken');
+      if (savedToken) {
+        S.deployToken = savedToken;
+        $("modeCreateBtn").disabled = false;
+        $("modeCreateBtn").style.opacity = '1';
+        $("modeCreateBtn").style.cursor = 'pointer';
+        $("deployGateOk").style.display = 'block';
+      }
+    })();
+
+    $("deployPasscodeBtn").addEventListener("click", async () => {
+      const passcode = $("deployPasscode").value.trim();
+      const isEn = document.body.classList.contains("en-mode");
+      const errEl = $("deployGateErr");
+      errEl.style.display = 'none';
+      if (!passcode) {
+        errEl.textContent = isEn ? 'Please enter a passcode.' : '请输入授权码。';
+        errEl.style.display = 'block';
+        return;
+      }
+      $("deployPasscodeBtn").disabled = true;
+      $("deployPasscodeBtn").innerHTML = '⏳';
+      try {
+        const r = await api('/api/auth/deploy-passcode', { passcode });
+        if (r.ok && r.deployToken) {
+          S.deployToken = r.deployToken;
+          sessionStorage.setItem('deployToken', r.deployToken);
+          $("modeCreateBtn").disabled = false;
+          $("modeCreateBtn").style.opacity = '1';
+          $("modeCreateBtn").style.cursor = 'pointer';
+          $("deployGateOk").style.display = 'block';
+          $("deployGateErr").style.display = 'none';
+          $("deployPasscode").value = '';
+        } else {
+          errEl.textContent = isEn ? (r.error || 'Incorrect passcode.') : (r.error || '授权码错误。');
+          errEl.style.display = 'block';
+        }
+      } catch (e) {
+        errEl.textContent = isEn ? 'Network error: ' + e.message : '网络错误：' + e.message;
+        errEl.style.display = 'block';
+      } finally {
+        $("deployPasscodeBtn").disabled = false;
+        $("deployPasscodeBtn").innerHTML = '<span class="lang-zh">✓ 验证</span><span class="lang-en">✓ Verify</span>';
+      }
+    });
+    $("deployPasscode").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") $("deployPasscodeBtn").click();
+    });
 
     $("modeCreateBtn").addEventListener("click", () => {
       S.mode = "create";
@@ -1027,6 +1113,7 @@ import Layout from "../layouts/Layout.astro";
         skill: S.skill,
         refreshToken: S.refreshToken,
         dashboardSecret: S.dashboardSecret,
+        deployToken: S.deployToken || sessionStorage.getItem('deployToken') || '',
       };
       const r = await api("/api/agent/create", payload);
       if (r.error) {

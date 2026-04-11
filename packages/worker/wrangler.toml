@@ -46,6 +46,7 @@ database_id = "13e065a3-b527-4613-8e8f-1ec7e1933d3f"
 # GEMINI_MODEL           — (optional) Default model, e.g. gemini-3.1-pro-preview
 # KO_FI_VERIFICATION_TOKEN — Ko-Fi Webhook verification token (Ko-Fi → Webhooks settings)
 # BEARER_TOKEN           — Twitter App-only Bearer Token, used by /api/distill (no user OAuth needed)
+# DEPLOY_PASSCODE        — Gates /wizard (create+deploy flow); issue to paying users only
 
 [vars]
 GEMINI_MODEL = "gemini-3-flash-preview"

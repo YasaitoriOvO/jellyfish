@@ -83,6 +83,8 @@ export interface Env {
   CRON_SECRET?: string;
   /** Twitter Bearer Token (App-only) used for the distillation demo flow — set via .dev.vars or wrangler secret */
   BEARER_TOKEN?: string;
+  /** Deploy passcode — gates who can create/deploy new agents (set via wrangler secret put DEPLOY_PASSCODE) */
+  DEPLOY_PASSCODE?: string;
 }
 
 // ─── X API types ───────────────────────────────────────────────────────────────
