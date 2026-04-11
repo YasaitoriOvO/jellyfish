@@ -215,37 +215,20 @@ async function processMention(
     return true;
   }
 
-  // ── Layer 3: Prevent replying to side-thread mentions ───────────────────────
-  // X auto-injects @agent into any reply within a thread where the agent was
-  // mentioned, causing bystander comments to appear as new agent mentions.
-  //
-  // Guard: if this mention is itself a reply (not the root of a thread), verify
-  // that the direct parent tweet was authored by either:
-  //   (a) the agent itself — the person is replying to the agent directly, or
-  //   (b) the mention author themselves — they are continuing their own chain.
-  // If neither, this is a bystander comment in a thread the agent was @-tagged
-  // in but is not the intended recipient of this particular reply.
+  // ── Layer 3: Prevent replying to bystander comments in threaded conversations
+  // If the agent has already replied to this conversation, we need to be strict:
+  // we only want to reply if the user is replying *directly* to the agent's own tweet,
+  // or if they are replying to their own tweet (continuing their thought).
+  // Otherwise, it's likely a bystander commenting on the main thread, and Twitter
+  // just auto-injected the @agent tag. We silently skip to avoid intruding.
   const isReply = mention.referenced_tweets?.some(r => r.type === 'replied_to') ?? false;
-  if (isReply) {
-    // thread is ordered oldest→newest; the direct parent of the mention is
-    // thread[thread.length - 2] (second-to-last, since last IS the mention itself).
+  if (isReply && agentReplyCount >= 1) {
     const directParent = thread.length >= 2 ? thread[thread.length - 2] : null;
     const parentIsAgent = directParent?.author_id === ownUserId;
     const parentIsMentionAuthor = directParent?.author_id === mention.author_id;
+    
     if (!parentIsAgent && !parentIsMentionAuthor) {
-      console.log(`[agent ${agent.id}] Skipping mention ${mention.id} — this is a bystander reply; direct parent (${directParent?.id ?? 'none'}, author=${directParent?.author_id ?? 'unknown'}) is neither the agent nor the mention author ${mention.author_id ?? 'unknown'}`);
-      return true;
-    }
-  }
-
-  // ── Layer 3b: If agent has already replied, only continue if directly replied to ─
-  // Even when the direct parent is the mention author's own tweet (they're threading),
-  // skip if the agent has already participated unless the parent IS the agent's tweet.
-  if (agentReplyCount >= 1 && isReply) {
-    const directParent = thread.length >= 2 ? thread[thread.length - 2] : null;
-    const parentIsAgent = directParent?.author_id === ownUserId;
-    if (!parentIsAgent) {
-      console.log(`[agent ${agent.id}] Skipping mention ${mention.id} — agent has already replied in this conversation but the direct parent (${directParent?.id ?? 'none'}) is not the agent's own tweet (side-thread prevention)`);
+      console.log(`[agent ${agent.id}] Skipping mention ${mention.id} — agent has already replied in this conversation and the direct parent (${directParent?.id ?? 'none'}) is neither the agent nor the author (bystander prevention)`);
       return true;
     }
   }
