@@ -3,7 +3,7 @@ import { cors } from 'hono/cors';
 import type { Env, AgentDbRecord } from './types.ts';
 import { runMentionLoop, runSpontaneousTweet, runTimelineEngagement, runMemoryRefresh, runNightlyEvolution, runRefreshSourceNames } from './agent.ts';
 import { getMe, getUserByUsername, getUserTweets } from './twitter.ts';
-import { getLastMentionId, getCachedOwnUserId, saveOwnUserId, getInteractionsMemory, getActivityLog, getSourceNames } from './memory.ts';
+import { getLastMentionId, saveLastMentionId, getCachedOwnUserId, saveOwnUserId, getInteractionsMemory, getActivityLog, getSourceNames, hasReplied, markReplied } from './memory.ts';
 import { fetchSourceTweets, distillSkillFromTweets, genSample, refineSkill } from './builder.ts';
 import { listGeminiModels } from './gemini.ts';
 import { getValidAccessToken } from './auth.ts';
@@ -866,6 +866,34 @@ app.all('/api/agent/*', async (c) => {
     } catch (err) { return c.json({ ok: false, error: String(err) }, 500); }
   }
 
+
+  // ── Debug: check / unlock a mention's replied-lock in KV ─────────────────
+  if (pathname.endsWith('/debug-mention')) {
+    if (!await requireAuth(c, agentId)) return c.json({ error: 'Unauthorized — session token required' }, 401);
+    const tweetId = c.req.query('tweet_id');
+    if (!tweetId) return c.json({ error: 'tweet_id query param required' }, 400);
+    if (method === 'DELETE') {
+      await c.env.AGENT_STATE.delete(`agent:${agentId}:replied:${tweetId}`);
+      return c.json({ ok: true, unlocked: tweetId });
+    }
+    const locked = await hasReplied(c.env, agentId, tweetId);
+    const lastMentionId = await getLastMentionId(c.env, agentId);
+    return c.json({ tweetId, locked, lastMentionId });
+  }
+
+  // ── Debug: reset the mention polling cursor (sinceId) ─────────────────────
+  // Use ?since_id=<id> to set a specific cursor, or omit to clear it entirely.
+  if (pathname.endsWith('/reset-cursor') && method === 'POST') {
+    if (!await requireAuth(c, agentId)) return c.json({ error: 'Unauthorized — session token required' }, 401);
+    const sinceId = c.req.query('since_id') ?? null;
+    const prevId = await getLastMentionId(c.env, agentId);
+    if (sinceId) {
+      await saveLastMentionId(c.env, agentId, sinceId);
+    } else {
+      await c.env.AGENT_STATE.delete(`agent:${agentId}:last_mention_id`);
+    }
+    return c.json({ ok: true, previous: prevId, current: sinceId ?? null });
+  }
 
   return c.json({ error: 'Unknown agent action' }, 404);
 });
