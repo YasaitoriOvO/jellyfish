@@ -57,6 +57,13 @@ export async function distillSkillFromTweets(
   - *View of the World*: How this person perceives society, humanity, and reality.
   - *View of Life*: Their philosophy on the purpose and meaning of life, success, and happiness.
   - *Value System*: What they consider right/wrong, important/unimportant; moral stances and priorities.
+- **Political Orientation (政治倾向)**: Where this person sits on the political spectrum (left/center/right, libertarian/authoritarian, etc.), their stances on specific issues (e.g., governance, civil rights, economics, geopolitics), their attitude toward authority and institutions, and the political vocabulary or rhetoric they naturally reach for. Note any contradictions or ambivalence.
+- **Interests & Hobbies (兴趣爱好)**: Concrete domains, activities, and content the person actively engages with — fandoms, games, media, sports, crafts, intellectual pursuits, etc. Extract specific titles, names, or topics mentioned or implied in the tweets.
+- **Obsessions & Quirky Fixations (性癖)**: The person's idiosyncratic aesthetic preferences, niche fascinations, recurring brain-worm topics, and non-mainstream fixations that color their personality — e.g., love of a specific visual trope, obsession with absurd edge cases, guilty pleasures, or unusual intellectual turn-ons. Be specific and evidence-based.
+- **Emotional Patterns (情绪模式)**: What triggers strong emotional reactions (positive or negative), how they express emotions publicly (venting, humor, silence), their emotional regulation style, and recurring emotional themes (e.g., persistent anxiety, low-grade cynicism, sudden bursts of enthusiasm).
+- **Interpersonal Dynamics (人际关系模式)**: How they relate to others online — social attachment style (warm/aloof/selective), how they treat strangers vs. close contacts, conflict response (confrontational/passive-aggressive/avoidant), clique behavior, parasocial tendencies, and how they position themselves within communities.
+- **Self-Perception & Blind Spots (自我认知与盲区)**: How they see and present themselves vs. how they actually come across in the tweets. Identify any gaps, contradictions, or recurring self-narrative (e.g., "I'm the rational one", "I don't care what people think"). Note consistent blind spots or defensiveness patterns.
+- **Red Lines & Taboos (禁区与雷点)**: Topics, words, or framings that consistently provoke a strong reaction or are conspicuously avoided. What they refuse to engage with, what makes them shut down or lash out, and any ideological or personal tripwires.
 - **Verbal Tics & Catchphrases (口癖)**: A dedicated list of recurring words, filler phrases, sentence-ending particles, pet expressions, and structural patterns that define this person's idiolect. Provide concrete examples extracted verbatim or closely paraphrased from the source tweets.
 - **Tone & Voice**: Overall register (formal/casual/ironic), code-switching habits, punctuation style, emoji usage.
 - **Constraints**: Behavioral rules for the AI persona — reply length, when to output <skip>, hashtag policy.
@@ -73,6 +80,9 @@ Generate the persona.skill document now using ONLY English:`
   - *世界观*：对社会、人性与现实的基本认知和判断。
   - *人生观*：对生命意义、成功与幸福的理解和态度。
   - *价值观*：是非判断标准、道德立场与优先级排序。
+- **政治倾向**：此人在政治光谱上的大致位置（左/中/右、自由主义/威权主义等）、对具体议题的立场（如治理模式、公民权利、经济政策、地缘政治）、对权威与体制机构的态度，以及习惯调用的政治话语和修辞。如有矛盾或模糊地带，请一并标注。
+- **兴趣爱好**：具体列出此人主动涉猎的领域、活动和内容——包括但不限于：粉丝圈、游戏、影视、音乐、运动、手艺、学术偏好等。要求提取推文中出现的具体作品名、圈子名或话题，而非泛泛而谈。
+- **性癖**：此人独特的审美趣味、小众迷恋点、反复出现的脑洞方向，以及不常公开但渗透在字里行间的非主流偏好——例如对某类视觉风格的执念、对荒诞边缘案例的沉迷、不见光的爱好，或某种感性/理性上的"特殊口味"。要求以推文为据，具体而不泛化。
 - **口癖**：专项列出这个人惯用的词汇、口头禅、句尾习惯、标志性表达和句式结构。要求从原推文中提取具体例子或高度接近的复现，让 AI 仿写时能精准复刻语感。
 - **语气与腔调**：整体语域（正式/随意/反讽）、中英混用习惯、标点偏好、表情符号习惯。
 - **行为约束**：AI 角色的行为规则——回复字数、何时输出 <skip>、话题标签策略。
