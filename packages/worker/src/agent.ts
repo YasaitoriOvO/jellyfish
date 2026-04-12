@@ -291,12 +291,27 @@ async function _doProcessMention(
     }]);
   }
 
-  // \u2500\u2500 LLM decision \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+  // ── Probability gate: enforce reply_pct in code before calling LLM ────────
+  // When reply_pct = 1, Math.random() < 1 is always true → always reply.
+  // VIP entries use their own replyProbability override.
+  const vipEntry = interactorUsername
+    ? agent.vip_list.find(v => v.username.toLowerCase() === interactorUsername.toLowerCase())
+    : undefined;
+  const effectiveReplyPct = vipEntry ? vipEntry.replyProbability : agent.reply_pct;
+  if (Math.random() >= effectiveReplyPct) {
+    console.log(`[agent ${agent.id}] Probability gate: skipping mention ${mention.id} from @${interactorUsername} (pct=${effectiveReplyPct})`);
+    await logActivity(env, agent.id, `skip:${originalTweetId}`, 'view',
+      `\u5df2\u8bfb\u4e0d\u56de\u4e86 @${interactorUsername} \u7684\u63d0\u53ca\uff1a"${mention.text}"`, interactorUsername);
+    return permanentSkip(`probability gate (pct=${effectiveReplyPct})`);
+  }
+
+  // ── LLM decision ───────────────────────────────────────────────────
   const replyText = await generateReply(env, agent, conversation, ownUserId);
 
   if (replyText.includes('<skip>') || replyText.trim() === '') {
+    // LLM may still skip for content it strongly dislikes
     await logActivity(env, agent.id, `skip:${originalTweetId}`, 'view',
-      `\u5df2\u8bfb\u4e0d\u56de\u4e86 @${interactorUsername} \u7684\u63d0\u53ca\uff1a\u201c${mention.text}\u201d`, interactorUsername);
+      `\u5df2\u8bfb\u4e0d\u56de\u4e86 @${interactorUsername} \u7684\u63d0\u53ca\uff1a"${mention.text}"`, interactorUsername);
     return permanentSkip('LLM chose to skip');
   }
 
@@ -536,8 +551,21 @@ export async function runTimelineEngagement(env: Env, agent: AgentDbRecord): Pro
       await markTimelineTweetSeen(env, agent.id, item.tweet.id);
       continue;
     }
-    console.log(`[agent ${agent.id}] Evaluating timeline tweet ${item.tweet.id} from @${item.user.username}...`);
     await markTimelineTweetSeen(env, agent.id, item.tweet.id);
+
+    // ── Probability gate: enforce like_pct in code, not just in LLM prompt ─
+    // When like_pct = 1, Math.random() < 1 is always true → always engage.
+    // The LLM is only called for tweets that pass this gate, so it only needs
+    // to decide between <like> and a reply — no longer responsible for skipping.
+    const vip = agent.vip_list.find(v => v.username.toLowerCase() === authorHandle);
+    const effectivePct = vip ? vip.replyProbability : agent.like_pct;
+    if (Math.random() >= effectivePct) {
+      console.log(`[agent ${agent.id}] Probability gate: skipping timeline tweet ${item.tweet.id} from @${item.user.username} (pct=${effectivePct})`);
+      await logActivity(env, agent.id, `skip:${item.tweet.id}`, 'view', `默默看了看 @${item.user.username} 说的："${item.tweet.text}"`, item.user.username);
+      continue;
+    }
+
+    console.log(`[agent ${agent.id}] Evaluating timeline tweet ${item.tweet.id} from @${item.user.username}...`);
 
     try {
       const tweetReplies = await getTweetReplies(env, agent, item.tweet, 3);
@@ -545,6 +573,7 @@ export async function runTimelineEngagement(env: Env, agent: AgentDbRecord): Pro
       console.log(`[agent ${agent.id}] LLM decision for ${item.tweet.id}: "${decision}"`);
 
       if (decision.startsWith('<skip>')) {
+        // LLM still may output <skip> for strongly repulsive content
         await logActivity(env, agent.id, `skip:${item.tweet.id}`, 'view', `默默看了看 @${item.user.username} 说的："${item.tweet.text}"`, item.user.username);
       } else if (decision.startsWith('<like>')) {
         await likeTweet(env, agent, ownUserId, item.tweet.id);
